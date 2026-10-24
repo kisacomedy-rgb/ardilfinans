@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kişisel Finans Yönetim Sistemi</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* ===== TÜM ORİJİNAL STİLLER AYNEN KORUNDU ===== */
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        .sidebar {
+            background-color: var(--primary-color);
+            color: white;
+            min-height: 100vh;
+            padding: 0;
+            box-shadow: 3px 0 10px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 250px;
+            z-index: 1000;
+            transition: transform 0.3s ease-in-out;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            transition: margin-left 0.3s;
+        }
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(-100%); width: 280px; }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 15px; padding-top: 70px; }
+            .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+            .sidebar-overlay.active { display: block; }
+            .mobile-menu-btn { display: block; }
+            .mobile-header { display: flex; }
+        }
+        @media (max-width: 768px) {
+            .main-content { padding: 10px; padding-top: 70px; }
+            .dashboard-card .stats-number { font-size: 1.5rem !important; }
+            .card-icon { font-size: 2rem !important; }
+            .page-title h2 { font-size: 1.5rem; }
+            .ai-advice-card .row { flex-direction: column; }
+            .ai-advice-card .col-md-2 { margin-bottom: 15px; }
+            select.form-select { font-size: 16px !important; padding: 12px !important; }
+            option { font-size: 14px !important; padding: 8px !important; }
+        }
+        @media (max-width: 576px) {
+            .main-content { padding: 8px; padding-top: 70px; }
+            .stats-number { font-size: 1.3rem !important; }
+            .dashboard-card .card-title { font-size: 1rem; }
+            .action-buttons button { margin-bottom: 5px; display: block; width: 100%; }
+            .action-buttons button:not(:last-child) { margin-right: 0; }
+            .table-responsive { font-size: 0.85rem; }
+            .table th, .table td { padding: 0.5rem; }
+            .modal-dialog { margin: 10px; }
+        }
+        .sidebar-header { padding: 20px; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-menu { padding: 20px 0; }
+        .sidebar-menu ul { list-style: none; padding: 0; margin: 0; }
+        .sidebar-menu li { margin-bottom: 5px; }
+        .sidebar-menu a {
+            color: rgba(255,255,255,0.8);
+            display: block;
+            padding: 12px 20px;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-left: 3px solid var(--secondary-color);
+        }
+        .sidebar-menu i { margin-right: 10px; width: 20px; text-align: center; }
+        .dashboard-card {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+            margin-bottom: 20px;
+            height: 100%;
+        }
+        .dashboard-card:hover { transform: translateY(-5px); }
+        .card-icon { font-size: 2.5rem; margin-bottom: 15px; }
+        .summary-card { background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: white; }
+        .income-card { background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%); color: white; }
+        .expense-card { background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); color: white; }
+        .debt-card { background: linear-gradient(135deg, #f46b45 0%, #eea849 100%); color: white; }
+        .receivable-card { background: linear-gradient(135deg, #834d9b 0%, #d04ed6 100%); color: white; }
+        .bank-debt-card { background: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%); color: white; }
+        .investment-card { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; }
+        .gold-card { background: linear-gradient(135deg, #ffd700 0%, #ff9500 100%); color: white; }
+        .nav-tabs .nav-link { color: var(--primary-color); font-weight: 500; }
+        .nav-tabs .nav-link.active { color: var(--secondary-color); border-bottom: 3px solid var(--secondary-color); }
+        .form-control, .form-select { border-radius: 8px; padding: 10px 15px; border: 1px solid #ddd; font-size: 16px; }
+        .form-control:focus, .form-select:focus { border-color: var(--secondary-color); box-shadow: 0 0 0 0.25rem rgba(52,152,219,0.25); }
+        .btn-primary { background-color: var(--secondary-color); border-color: var(--secondary-color); padding: 10px 20px; border-radius: 8px; font-weight: 600; }
+        .btn-primary:hover { background-color: #2980b9; border-color: #2980b9; }
+        .table th { background-color: #f8f9fa; border-top: none; font-weight: 600; color: var(--primary-color); }
+        .table-hover tbody tr:hover { background-color: rgba(52,152,219,0.05); }
+        .badge { padding: 6px 10px; font-weight: 500; border-radius: 20px; }
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        .status-paid { background-color: #d4edda; color: #155724; }
+        .status-overdue { background-color: #f8d7da; color: #721c24; }
+        .mobile-menu-btn { display: none; background: var(--primary-color); color: white; border: none; border-radius: 5px; padding: 10px 15px; font-size: 1.5rem; position: fixed; top: 15px; left: 15px; z-index: 1001; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .mobile-header { display: none; background: var(--primary-color); color: white; padding: 15px; position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .chart-container { position: relative; height: 300px; margin-bottom: 20px; }
+        @media (max-width: 768px) { .chart-container { height: 250px; } }
+        @media (max-width: 576px) { .chart-container { height: 200px; } }
+        .empty-state { text-align: center; padding: 40px 20px; color: #6c757d; }
+        .empty-state i { font-size: 4rem; margin-bottom: 20px; color: #dee2e6; }
+        .transaction-type-income { border-left: 4px solid var(--success-color); }
+        .transaction-type-expense { border-left: 4px solid var(--danger-color); }
+        .transaction-type-transfer { border-left: 4px solid var(--info-color); }
+        .transaction-type-debt { border-left: 4px solid var(--warning-color); }
+        .account-balance { font-size: 1.8rem; font-weight: 700; }
+        @media (max-width: 768px) { .account-balance { font-size: 1.5rem; } }
+        .positive-balance { color: var(--success-color); }
+        .negative-balance { color: var(--danger-color); }
+        .zero-balance { color: #6c757d; }
+        .page-title { color: var(--primary-color); margin-bottom: 30px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; }
+        @media (max-width: 768px) { .page-title { margin-bottom: 20px; padding-bottom: 10px; } }
+        footer { margin-top: 50px; padding: 20px 0; border-top: 1px solid #dee2e6; color: #6c757d; font-size: 0.9rem; text-align: center; }
+        .action-buttons button { margin-right: 5px; }
+        .toast { position: fixed; bottom: 20px; right: 20px; z-index: 1050; }
+        @media (max-width: 576px) { .toast { bottom: 10px; right: 10px; left: 10px; width: auto; } }
+        .stats-number { font-size: 2rem; font-weight: 700; }
+        .stats-label { font-size: 0.9rem; opacity: 0.9; }
+        .ai-advice-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .ai-advice-icon { font-size: 2.5rem; margin-bottom: 15px; }
+        .ai-advice-content { font-size: 0.95rem; line-height: 1.6; }
+        .ai-advice-tip { background: rgba(255,255,255,0.2); border-radius: 8px; padding: 10px; margin-top: 10px; font-style: italic; }
+        .edit-btn { background-color: #f39c12; border-color: #f39c12; color: white; }
+        .edit-btn:hover { background-color: #d68910; border-color: #d68910; color: white; }
+        .delete-all-btn { background-color: #e74c3c; border-color: #e74c3c; color: white; }
+        .delete-all-btn:hover { background-color: #c0392b; border-color: #c0392b; color: white; }
+        @media (max-width: 768px) { .row { margin-left: -8px; margin-right: -8px; } .col-md-6, .col-md-4, .col-md-3, .col-md-2, .col-md-8, .col-md-12 { padding-left: 8px; padding-right: 8px; } .card { margin-bottom: 15px; } }
+        @media (max-width: 768px) { .modal-content { border-radius: 10px; } .modal-header, .modal-footer { padding: 15px; } .modal-body { padding: 20px; max-height: 70vh; overflow-y: auto; } .modal-body select { -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 10px center; background-size: 1em; padding-right: 2.5em !important; } }
+        .mobile-table-row { display: none; }
+        @media (max-width: 768px) { .desktop-table { display: none; } .mobile-table-row { display: block; } .mobile-transaction-card { border-radius: 8px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 4px solid #ddd; } }
+        @media (max-width: 576px) { .btn-group { flex-wrap: wrap; width: 100%; } .btn-group .btn { flex: 1; min-width: 70px; margin-bottom: 5px; font-size: 0.8rem; padding: 5px 8px; } }
+        .investment-type { color: #11998e; font-weight: 600; }
+        .gold-type { color: #ffd700; font-weight: 600; }
+        .account-filter-buttons .btn { margin-bottom: 5px; }
+        .account-select-option { display: flex; justify-content: space-between; align-items: center; }
+        .account-select-option .balance { font-size: 0.8rem; color: #666; }
+
+        /* ===== YENİ EKLENEN STİLLER ===== */
+        .installment-item { border-left: 3px solid var(--secondary-color); padding-left: 10px; margin-bottom: 5px; }
+        .installment-paid { border-left-color: var(--success-color); opacity: 0.7; }
+        .installment-overdue { border-left-color: var(--danger-color); }
+        .category-badge { cursor: pointer; }
+        .category-badge .fa-times { margin-left: 5px; opacity: 0.7; }
+        .category-badge .fa-times:hover { opacity: 1; }
+        .dark-mode { background-color: #1a1a2e; color: #e0e0e0; }
+        .dark-mode .card, .dark-mode .modal-content, .dark-mode .form-control, .dark-mode .form-select {
+            background-color: #2d2d44; color: #e0e0e0; border-color: #444;
+        }
+        .dark-mode .table th { background-color: #3a3a5a; color: #e0e0e0; }
+        .dark-mode .page-title { border-bottom-color: #444; }
+        .dark-mode .text-muted { color: #aab !important; }
+        .dark-mode .table-hover tbody tr:hover { background-color: rgba(83,52,131,0.2); }
+        .dark-mode .modal-header, .dark-mode .modal-footer { border-color: #444; }
+        .dark-mode .empty-state i { color: #555; }
+        .dark-mode .ai-advice-card { background: linear-gradient(135deg, #4a4a8a 0%, #5a3a7a 100%); }
+        .dark-mode .sidebar { background-color: #0f3460; }
+        .dark-mode .mobile-header { background-color: #0f3460; }
+        .dark-mode .mobile-menu-btn { background-color: #0f3460; }
+        .dark-mode .summary-card { background: linear-gradient(135deg, #3a1a6a 0%, #1a3a7a 100%); }
+        .dark-mode .income-card { background: linear-gradient(135deg, #006a5a 0%, #4a7a1a 100%); }
+        .dark-mode .expense-card { background: linear-gradient(135deg, #8a1a2a 0%, #8a2a1a 100%); }
+        .dark-mode .debt-card { background: linear-gradient(135deg, #8a4a1a 0%, #7a5a1a 100%); }
+        .dark-mode .investment-card { background: linear-gradient(135deg, #0a6a5a 0%, #1a8a3a 100%); }
+        .dark-mode .gold-card { background: linear-gradient(135deg, #9a7a00 0%, #7a5a00 100%); }
+        
+        /* Taksit listesi modal'ı için */
+        .installment-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .installment-list-item:last-child { border-bottom: none; }
+        .installment-status-badge { min-width: 80px; text-align: center; }
+
+        /* "Sonraki aya taşı" butonu */
+        .next-month-btn { font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+    <!-- Mobil Menü Butonu -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fas fa-bars"></i></button>
+    <!-- Mobil Başlık -->
+    <div class="mobile-header">
+        <div><h4 class="mb-0"><i class="fas fa-wallet me-2"></i>Finansım</h4><small class="opacity-75">Kişisel Finans Yönetimi</small></div>
+        <div><button class="btn btn-sm btn-outline-light" id="mobileDashboardBtn"><i class="fas fa-tachometer-alt"></i></button></div>
+    </div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header"><h3><i class="fas fa-wallet"></i> Finansım</h3><p class="mb-0">Kişisel Finans Yönetimi</p></div>
+        <div class="sidebar-menu">
+            <ul>
+                <li><a href="#" class="active" data-page="dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="#" data-page="accounts"><i class="fas fa-credit-card"></i> Hesaplarım</a></li>
+                <li><a href="#" data-page="transactions"><i class="fas fa-exchange-alt"></i> İşlemler</a></li>
+                <li><a href="#" data-page="investments"><i class="fas fa-chart-line"></i> Yatırımlar</a></li>
+                <li><a href="#" data-page="debts"><i class="fas fa-hand-holding-usd"></i> Borçlarım</a></li>
+                <li><a href="#" data-page="receivables"><i class="fas fa-handshake"></i> Alacaklarım</a></li>
+                <li><a href="#" data-page="bank-debts"><i class="fas fa-university"></i> Banka Borçları</a></li>
+                <li><a href="#" data-page="reports"><i class="fas fa-chart-bar"></i> Raporlar</a></li>
+                <li><a href="#" data-page="settings"><i class="fas fa-cog"></i> Ayarlar</a></li>
+            </ul>
+        </div>
+        <div class="sidebar-footer" style="padding: 20px; position: absolute; bottom: 0; width: 100%;">
+            <div class="text-center">
+                <p class="mb-2">Verileriniz sadece sizde saklanır</p>
+                <button class="btn btn-sm btn-outline-light w-100 mb-2" id="exportData"><i class="fas fa-download"></i> Verileri Yedekle</button>
+                <button class="btn btn-sm delete-all-btn w-100" id="deleteAllData"><i class="fas fa-trash-alt"></i> Tüm Kayıtları Sil</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ana İçerik -->
+    <div class="main-content" id="mainContent">
+        <!-- Dashboard -->
+        <div id="dashboard-page" class="page-content">
+            <div class="page-title"><h2><i class="fas fa-tachometer-alt me-2"></i>Finansal Dashboard</h2><p class="lead mb-0">Toplam finansal durumunuzun özeti</p></div>
+            <div class="ai-advice-card" id="ai-advice-card">
+                <div class="row align-items-center">
+                    <div class="col-md-2 text-center"><div class="ai-advice-icon"><i class="fas fa-robot"></i></div></div>
+                    <div class="col-md-10">
+                        <h4><i class="fas fa-lightbulb me-2"></i>AI Finans Asistanı Tavsiyeleri</h4>
+                        <div class="ai-advice-content" id="ai-advice-content">Finansal durumunuz analiz ediliyor...</div>
+                        <div class="ai-advice-tip" id="ai-advice-tip"><i class="fas fa-info-circle me-2"></i><span id="ai-tip-text">AI asistanınız finansal durumunuzu sürekli analiz eder ve size özel tavsiyeler sunar.</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6"><div class="card dashboard-card summary-card"><div class="card-body text-center"><div class="card-icon"><i class="fas fa-coins"></i></div><h5 class="card-title">Net Varlık</h5><h2 class="stats-number" id="net-worth">₺0,00</h2><p class="stats-label" id="net-worth-change">Son 30 gün: +₺0,00</p></div></div></div>
+                <div class="col-xl-3 col-md-6"><div class="card dashboard-card income-card"><div class="card-body text-center"><div class="card-icon"><i class="fas fa-money-bill-wave"></i></div><h5 class="card-title">Toplam Gelir</h5><h2 class="stats-number" id="total-income">₺0,00</h2><p class="stats-label">Bu ay</p></div></div></div>
+                <div class="col-xl-3 col-md-6"><div class="card dashboard-card expense-card"><div class="card-body text-center"><div class="card-icon"><i class="fas fa-shopping-cart"></i></div><h5 class="card-title">Toplam Gider</h5><h2 class="stats-number" id="total-expense">₺0,00</h2><p class="stats-label">Bu ay</p></div></div></div>
+                <div class="col-xl-3 col-md-6"><div class="card dashboard-card debt-card"><div class="card-body text-center"><div class="card-icon"><i class="fas fa-credit-card"></i></div><h5 class="card-title">Toplam Borç</h5><h2 class="stats-number" id="total-debt">₺0,00</h2><p class="stats-label">Toplam borç bakiyesi</p></div></div></div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-md-6"><div class="card dashboard-card"><div class="card-body"><h5 class="card-title"><i class="fas fa-chart-pie me-2"></i>Gider Dağılımı</h5><div class="chart-container"><canvas id="expenseDistributionChart"></canvas></div></div></div></div>
+                <div class="col-md-6"><div class="card dashboard-card"><div class="card-body"><h5 class="card-title"><i class="fas fa-chart-line me-2"></i>Gelir-Gider Trendi</h5><div class="chart-container"><canvas id="incomeExpenseTrendChart"></canvas></div></div></div></div>
+            </div>
+            <div class="row">
+                <div class="col-md-6"><div class="card dashboard-card"><div class="card-body"><h5 class="card-title"><i class="fas fa-exclamation-triangle me-2"></i>Yaklaşan Ödemeler</h5><div id="upcoming-payments"><div class="empty-state"><i class="far fa-calendar-check"></i><h5>Yaklaşan ödeme yok</h5><p class="text-muted">Önümüzdeki 7 gün içinde ödenecek borç bulunmuyor</p></div></div></div></div></div>
+                <div class="col-md-6"><div class="card dashboard-card"><div class="card-body"><h5 class="card-title"><i class="fas fa-history me-2"></i>Son İşlemler</h5><div id="recent-transactions"><div class="empty-state"><i class="far fa-clock"></i><h5>Henüz işlem yok</h5><p class="text-muted">İlk işleminizi eklediğinizde burada görünecek</p></div></div></div></div></div>
+            </div>
+        </div>
+
+        <!-- Hesaplarım -->
+        <div id="accounts-page" class="page-content d-none">
+            <div class="page-title"><h2><i class="fas fa-credit-card me-2"></i>Hesaplarım</h2><p class="lead mb-0">Tüm hesaplarınız ve bakiyeleriniz</p></div>
+            <div class="row mb-4">
+                <div class="col-md-6"><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAccountModal"><i class="fas fa-plus-circle me-2"></i>Yeni Hesap Ekle</button></div>
+                <div class="col-md-6 text-end"><div class="btn-group account-filter-buttons" role="group"><button type="button" class="btn btn-outline-primary active" data-account-filter="all">Tümü</button><button type="button" class="btn btn-outline-primary" data-account-filter="cash">Nakit</button><button type="button" class="btn btn-outline-primary" data-account-filter="bank">Banka</button><button type="button" class="btn btn-outline-primary" data-account-filter="card">Kart</button><button type="button" class="btn btn-outline-primary" data-account-filter="investment">Yatırım</button><button type="button" class="btn btn-outline-primary" data-account-filter="gold">Altın</button></div></div>
+            </div>
+            <div class="row" id="accounts-list"><div class="col-12"><div class="empty-state"><i class="far fa-credit-card"></i><h5>Henüz hesap eklenmemiş</h5><p class="text-muted">İlk hesabınızı eklemek için "Yeni Hesap Ekle" butonuna tıklayın</p></div></div></div>
+        </div>
+
+        <!-- İşlemler -->
+        <div id="transactions-page" class="page-content d-none">
+            <div class="page-title"><h2><i class="fas fa-exchange-alt me-2"></i>İşlemler</h2><p class="lead mb-0">Tüm gelir, gider ve transfer işlemleriniz</p></div>
+            <div class="row mb-4">
+                <div class="col-md-6"><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTransactionModal"><i class="fas fa-plus-circle me-2"></i>Yeni İşlem Ekle</button></div>
+                <div class="col-md-6"><div class="input-group"><input type="text" class="form-control" placeholder="İşlem ara..." id="transaction-search"><button class="btn btn-outline-secondary" type="button" id="search-transaction"><i class="fas fa-search"></i></button></div></div>
+            </div>
+            <div class="card desktop-table"><div class="card-body"><div class="table-responsive"><table class="table table-hover" id="transactions-table"><thead><tr><th>Tarih</th><th>Açıklama</th><th>Kategori</th><th>Hesap</th><th class="text-end">Tutar</th><th class="text-center">İşlemler</th></tr></thead><tbody id="transactions-table-body"><tr><td colspan="6" class="text-center"><div class="empty-state py-5"><i class="far fa-exchange-alt"></i><h5>Henüz işlem eklenmemiş</h5><p class="text-muted">İlk işleminizi eklemek için "Yeni İşlem Ekle" butonuna tıklayın</p></div></td></tr></tbody></table></div></div></div>
+            <div class="mobile-table-row" id="mobile-transactions-list"></div>
+        </div>
+
+        <!-- Yatırımlar -->
+        <div id="investments-page" class="page-content d-none">
+            <div class="page-title"><h2><i class="fas fa-chart-line me-2"></i>Yatırımlar</h2><p class="lead mb-0">Yatırım ve altın hesaplarınız</p></div>
+            <div class="row mb-4">
+                <div class="col-md-6"><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAccountModal"><i class="fas fa-plus-circle me-2"></i>Yeni Yatırım Hesabı Ekle</button></div>
+                <div class="col-md-6 text-end"><div class="btn-group account-filter-buttons" role="group"><button type="button" class="btn btn-outline-primary active" data-investment-filter="all">Tümü</button><button type="button" class="btn btn-outline-primary" data-investment-filter="investment">Yatırım</button><button type="button" class="btn btn-outline-primary" data-investment-filter="gold">Altın</button></div></div>
+            </div>
+            <div class="row" id="investments-list"><div class="col-12"><div class="empty-state"><i class="fas fa-chart-line"></i><h5>Henüz yatırım hesabı eklenmemiş</h5><p class="text-muted">İlk yatırım hesabınızı eklemek için "Yeni Yatırım Hesabı Ekle" butonuna tıklayın</p></div></div></div>
+            <div class="row mt-4"><div class="col-md-12"><div class="card"><div class="card-body"><h5 class="card-title"><i class="fas fa-chart-bar me-2"></i>Yatırım Dağılımı</h5><div class="chart-container"><canvas id="investmentDistributionChart"></canvas></div></div></div></div></div>
+        </div>
+
+        <!-- Borçlar -->
+        <div id="debts-page" class="page-content d-none">
+            <div class="page-title"><h2><i class="fas fa-hand-holding-usd me-2"></i>Borçlarım</h2><p class="lead mb-0">Verdiğiniz borçların listesi</p></div>
+            <div class="row mb-4">
+                <div class="col-md-6"><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDebtModal"><i class="fas fa-plus-circle me-2"></i>Yeni Borç Ekle</button></div>
+                <div class="col-md-6 text-end"><div class="btn-group" role="group"><button type="button" class="btn btn-outline-primary active" data-debt-filter="all">Tümü</button><button type="button" class="btn btn-outline-primary" data-debt-filter="pending">Bekleyen</button><button type="button" class="btn btn-outline-primary" data-debt-filter="paid">Ödenen</button><button type="button" class="btn btn-outline-primary" data-debt-filter="overdue">Gecikmiş</button></div></div>
+            </div>
+            <div class="row" id="debts-list"><div class="col-12"><div class="empty-state"><i class="far fa-hand-holding-usd"></i><h5>Henüz borç eklenmemiş</h5><p class="text-muted">İlk borcunuzu eklemek için "Yeni Borç Ekle" butonuna tıklayın</p></div></div></div>
+        </div>
+
+        <!-- Alacaklar -->
+        <div id="receivables-page" class="page-content d-none">
+            <div class="page-title"><h2><i class="fas fa-handshake me-2"></i>Alacaklarım</h2><p class="lead mb-0">Aldığınız borçların listesi</p></div>
+            <div class="row mb-4">
+                <div class="col-md-6"><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addReceivableModal"><i class="fas fa-plus-circle me-2"></i>Yeni Alacak Ekle</button></div>
+                <div class="col-md-6 text-end"><div class="btn-group" role="group"><button type="button" class="btn btn-outline-primary active" data-receivable-filter="all">Tümü</button><button type="button" class="btn btn-outline-primary" data-receivable-filter="pending">Bekleyen</button><button type="button" class="btn btn-outline-primary" data-receivable-filter="paid">Ödenen</button><button type="button" class="btn btn-outline-primary" data-receivable-filter="overdue">Gecikmiş</button></div></div>
+            </div>
+            <div class="row" id="receivables-list"><div class="col-12"><div class="empty-state"><i class="far fa-handshake"></i><h5>Henüz alacak eklenmemiş</h5><p class="text-muted">İlk alacağınızı eklemek için "Yeni Alacak Ekle" butonuna tıklayın</p></div></div></div>
+        </div>
+
+        <!-- Banka Borçları (Taksitli) -->
+        <div id="bank-debts-page" class="page-content d-none">
+            <div class="page-title"><h2><i class="fas fa-university me-2"></i>Banka Borçları</h2><p class="lead mb-0">Kredi kartı, kredi ve taksitli borçlarınız</p></div>
+            <div class="row mb-4">
+                <div class="col-md-6"><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBankDebtModal"><i class="fas fa-plus-circle me-2"></i>Yeni Banka Borcu Ekle</button></div>
+                <div class="col-md-6 text-end"><div class="btn-group" role="group"><button type="button" class="btn btn-outline-primary active" data-bankdebt-filter="all">Tümü</button><button type="button" class="btn btn-outline-primary" data-bankdebt-filter="credit-card">Kredi Kartı</button><button type="button" class="btn btn-outline-primary" data-bankdebt-filter="loan">Kredi</button><button type="button" class="btn btn-outline-primary" data-bankdebt-filter="installment">Taksitli</button></div></div>
+            </div>
+            <div class="row" id="bank-debts-list"><div class="col-12"><div class="empty-state"><i class="far fa-university"></i><h5>Henüz banka borcu eklenmemiş</h5><p class="text-muted">İlk banka borcunuzu eklemek için "Yeni Banka Borcu Ekle" butonuna tıklayın</p></div></div></div>
+        </div>
+
+        <!-- Raporlar -->
+        <div id="reports-page" class="page-content d-none">
+            <div class="page-title"><h2><i class="fas fa-chart-bar me-2"></i>Raporlar</h2><p class="lead mb-0">Finansal durumunuzun detaylı analizleri</p></div>
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card"><div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-3 mb-3"><label for="report-period" class="form-label">Rapor Periyodu</label><select class="form-select" id="report-period"><option value="this-month">Bu Ay</option><option value="last-month">Geçen Ay</option><option value="this-year">Bu Yıl</option><option value="all-time">Tüm Zamanlar</option></select></div>
+                            <div class="col-md-3 mb-3"><label for="report-type" class="form-label">Rapor Türü</label><select class="form-select" id="report-type"><option value="income-vs-expense">Gelir-Gider Karşılaştırması</option><option value="expense-by-category">Gider Kategorileri</option><option value="income-by-category">Gelir Kategorileri</option><option value="account-balances">Hesap Bakiyeleri</option><option value="investment-distribution">Yatırım Dağılımı</option></select></div>
+                            <div class="col-md-3 mb-3"><button class="btn btn-primary w-100" id="generate-report"><i class="fas fa-chart-bar me-2"></i>Raporu Oluştur</button></div>
+                            <div class="col-md-3 mb-3"><button class="btn btn-success w-100" id="export-report-csv"><i class="fas fa-file-csv me-2"></i>CSV Olarak Dışa Aktar</button></div>
+                        </div>
+                    </div></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12"><div class="card"><div class="card-body"><h5 class="card-title" id="report-title">Gelir-Gider Karşılaştırması</h5><div class="chart-container"><canvas id="report-chart"></canvas></div></div></div></div>
+            </div>
+            <div class="row mt-4" id="report-summary"></div>
+        </div>
+
+        <!-- Ayarlar -->
+        <div id="settings-page" class="page-content d-none">
+            <div class="page-title"><h2><i class="fas fa-cog me-2"></i>Ayarlar</h2><p class="lead mb-0">Uygulama ve veri yönetimi ayarları</p></div>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card"><div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-database me-2"></i>Veri Yönetimi</h5>
+                        <p class="card-text">Uygulama verilerinizi yedekleyin veya geri yükleyin</p>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success" id="export-all-data"><i class="fas fa-download me-2"></i>Tüm Verileri Yedekle</button>
+                            <button class="btn btn-warning" id="import-data-btn"><i class="fas fa-upload me-2"></i>Verileri Geri Yükle</button>
+                            <input type="file" id="import-data-file" class="d-none" accept=".json">
+                        </div>
+                        <hr>
+                        <div class="alert alert-danger"><h6><i class="fas fa-exclamation-triangle me-2"></i>Tehlikeli İşlemler</h6><p class="mb-2">Bu işlem geri alınamaz. Tüm verileriniz silinecek.</p><button class="btn btn-danger w-100 delete-all-btn" id="reset-all-data"><i class="fas fa-trash-alt me-2"></i>Tüm Kayıtları Sil</button></div>
+                    </div></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card"><div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-user-cog me-2"></i>Kişisel Ayarlar</h5>
+                        <div class="mb-3"><label for="currency" class="form-label">Para Birimi</label><select class="form-select" id="currency"><option value="TRY" selected>🇹🇷 Türk Lirası (₺)</option><option value="USD">🇺🇸 Amerikan Doları ($)</option><option value="EUR">🇪🇺 Euro (€)</option><option value="GBP">🇬🇧 İngiliz Sterlini (£)</option></select></div>
+                        <div class="mb-3"><label for="language" class="form-label">Dil</label><select class="form-select" id="language"><option value="tr" selected>Türkçe</option><option value="en">English</option></select></div>
+                        <div class="mb-3"><label for="date-format" class="form-label">Tarih Formatı</label><select class="form-select" id="date-format"><option value="DD.MM.YYYY" selected>GG.AA.YYYY</option><option value="DD/MM/YYYY">GG/AA/YYYY</option><option value="YYYY-MM-DD">YYYY-AA-GG</option></select></div>
+                        <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" id="dark-mode"><label class="form-check-label" for="dark-mode">Karanlık Mod</label></div>
+                        <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" id="ai-advice-enabled" checked><label class="form-check-label" for="ai-advice-enabled">AI Tavsiyelerini Aktif Et</label></div>
+                        <button class="btn btn-primary w-100" id="save-settings"><i class="fas fa-save me-2"></i>Ayarları Kaydet</button>
+                        <hr>
+                        <h6><i class="fas fa-tags me-2"></i>Kategori Yönetimi</h6>
+                        <div class="mb-2"><label class="form-label">Gelir Kategorileri</label><div id="income-categories-list" class="d-flex flex-wrap gap-2"></div><div class="input-group mt-2"><input type="text" class="form-control" id="new-income-category" placeholder="Yeni gelir kategorisi"><button class="btn btn-outline-primary" id="add-income-category"><i class="fas fa-plus"></i></button></div></div>
+                        <div class="mb-2"><label class="form-label">Gider Kategorileri</label><div id="expense-categories-list" class="d-flex flex-wrap gap-2"></div><div class="input-group mt-2"><input type="text" class="form-control" id="new-expense-category" placeholder="Yeni gider kategorisi"><button class="btn btn-outline-primary" id="add-expense-category"><i class="fas fa-plus"></i></button></div></div>
+                    </div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Hesap Ekle -->
+    <div class="modal fade" id="addAccountModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="accountModalTitle">Yeni Hesap Ekle</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="addAccountForm"><input type="hidden" id="edit-account-id" value=""><div class="mb-3"><label for="account-name" class="form-label">Hesap Adı</label><input type="text" class="form-control" id="account-name" required></div><div class="mb-3"><label for="account-type" class="form-label">Hesap Türü</label><select class="form-select" id="account-type" required><option value="">Seçiniz</option><option value="cash">Nakit</option><option value="bank">Banka Hesabı</option><option value="card">Kredi Kartı</option><option value="savings">Birikim Hesabı</option><option value="investment">Yatırım Hesabı</option><option value="gold">Altın Hesabı</option><option value="other">Diğer</option></select></div><div class="mb-3"><label for="account-balance" class="form-label">Bakiye</label><input type="number" class="form-control" id="account-balance" value="0" step="0.01" required></div><div class="mb-3"><label for="account-currency" class="form-label">Para Birimi</label><select class="form-select" id="account-currency"><option value="TRY" selected>₺ Türk Lirası</option><option value="USD">$ Amerikan Doları</option><option value="EUR">€ Euro</option><option value="XAU">Altın (gr)</option></select></div><div class="mb-3"><label for="account-description" class="form-label">Açıklama (Opsiyonel)</label><textarea class="form-control" id="account-description" rows="2"></textarea></div></form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" id="save-account">Kaydet</button></div></div></div>
+    </div>
+
+    <!-- Modal: İşlem Ekle (SONRAKİ AYA TAŞI butonu eklendi) -->
+    <div class="modal fade" id="addTransactionModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="transactionModalTitle">Yeni İşlem Ekle</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="addTransactionForm"><input type="hidden" id="edit-transaction-id" value=""><div class="row"><div class="col-md-6"><div class="mb-3"><label for="transaction-type" class="form-label">İşlem Türü</label><select class="form-select" id="transaction-type" required><option value="">Seçiniz</option><option value="income">Gelir</option><option value="expense">Gider</option><option value="transfer">Hesap Arası Transfer</option></select></div></div><div class="col-md-6"><div class="mb-3"><label for="transaction-amount" class="form-label">Tutar</label><input type="number" class="form-control" id="transaction-amount" min="0" step="0.01" required></div></div></div><div class="row"><div class="col-md-6"><div class="mb-3"><label for="transaction-category" class="form-label">Kategori</label><select class="form-select" id="transaction-category" required><option value="">Seçiniz</option></select></div></div><div class="col-md-6"><div class="mb-3"><label for="transaction-date" class="form-label">Tarih</label><div class="input-group"><input type="date" class="form-control" id="transaction-date" required><button class="btn btn-outline-secondary next-month-btn" type="button" id="nextMonthBtn"><i class="fas fa-forward"></i> Sonraki Ay</button></div></div></div></div><div class="row"><div class="col-md-6"><div class="mb-3" id="from-account-container"><label for="from-account" class="form-label">Hesap (Gider/Transfer İçin)</label><select class="form-select" id="from-account"><option value="">Seçiniz</option></select></div><div class="mb-3 d-none" id="to-account-container"><label for="to-account" class="form-label">Hedef Hesap (Transfer İçin)</label><select class="form-select" id="to-account"><option value="">Seçiniz</option></select></div></div><div class="col-md-6"><div class="mb-3" id="income-account-container"><label for="income-account" class="form-label">Hesap (Gelir İçin)</label><select class="form-select" id="income-account"><option value="">Seçiniz</option></select></div></div></div><div class="mb-3"><label for="transaction-description" class="form-label">Açıklama</label><textarea class="form-control" id="transaction-description" rows="3"></textarea></div></form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" id="save-transaction">Kaydet</button></div></div></div>
+    </div>
+
+    <!-- Modal: Borç Ekle -->
+    <div class="modal fade" id="addDebtModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="debtModalTitle">Yeni Borç Ekle</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="addDebtForm"><input type="hidden" id="edit-debt-id" value=""><div class="mb-3"><label for="debt-person" class="form-label">Kime Borç Verildi?</label><input type="text" class="form-control" id="debt-person" required></div><div class="mb-3"><label for="debt-amount" class="form-label">Borç Miktarı</label><input type="number" class="form-control" id="debt-amount" min="0" step="0.01" required></div><div class="row"><div class="col-md-6"><div class="mb-3"><label for="debt-date" class="form-label">Borç Tarihi</label><input type="date" class="form-control" id="debt-date" required></div></div><div class="col-md-6"><div class="mb-3"><label for="debt-due-date" class="form-label">Ödeme Tarihi</label><input type="date" class="form-control" id="debt-due-date" required></div></div></div><div class="mb-3"><label for="debt-description" class="form-label">Açıklama (Opsiyonel)</label><textarea class="form-control" id="debt-description" rows="2"></textarea></div></form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" id="save-debt">Kaydet</button></div></div></div>
+    </div>
+
+    <!-- Modal: Alacak Ekle -->
+    <div class="modal fade" id="addReceivableModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="receivableModalTitle">Yeni Alacak Ekle</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="addReceivableForm"><input type="hidden" id="edit-receivable-id" value=""><div class="mb-3"><label for="receivable-person" class="form-label">Kimden Alacaklısınız?</label><input type="text" class="form-control" id="receivable-person" required></div><div class="mb-3"><label for="receivable-amount" class="form-label">Alacak Miktarı</label><input type="number" class="form-control" id="receivable-amount" min="0" step="0.01" required></div><div class="row"><div class="col-md-6"><div class="mb-3"><label for="receivable-date" class="form-label">Alacak Tarihi</label><input type="date" class="form-control" id="receivable-date" required></div></div><div class="col-md-6"><div class="mb-3"><label for="receivable-due-date" class="form-label">Tahsilat Tarihi</label><input type="date" class="form-control" id="receivable-due-date" required></div></div></div><div class="mb-3"><label for="receivable-description" class="form-label">Açıklama (Opsiyonel)</label><textarea class="form-control" id="receivable-description" rows="2"></textarea></div></form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" id="save-receivable">Kaydet</button></div></div></div>
+    </div>
+
+    <!-- Modal: Banka Borcu Ekle -->
+    <div class="modal fade" id="addBankDebtModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="bankDebtModalTitle">Yeni Banka Borcu Ekle</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="addBankDebtForm"><input type="hidden" id="edit-bank-debt-id" value=""><div class="row"><div class="col-md-6"><div class="mb-3"><label for="bank-debt-name" class="form-label">Banka/Borç Adı</label><input type="text" class="form-control" id="bank-debt-name" required></div></div><div class="col-md-6"><div class="mb-3"><label for="bank-debt-type" class="form-label">Borç Türü</label><select class="form-select" id="bank-debt-type" required><option value="">Seçiniz</option><option value="credit-card">Kredi Kartı</option><option value="loan">Kredi</option><option value="installment">Taksitli Borç</option><option value="mortgage">Mortgage</option><option value="other">Diğer</option></select></div></div></div><div class="row"><div class="col-md-6"><div class="mb-3"><label for="bank-debt-amount" class="form-label">Toplam Borç</label><input type="number" class="form-control" id="bank-debt-amount" min="0" step="0.01" required></div></div><div class="col-md-6"><div class="mb-3"><label for="bank-debt-current" class="form-label">Kalan Borç</label><input type="number" class="form-control" id="bank-debt-current" min="0" step="0.01" required></div></div></div><div class="row"><div class="col-md-4"><div class="mb-3"><label for="bank-debt-interest" class="form-label">Faiz Oranı (Yıllık %)</label><input type="number" class="form-control" id="bank-debt-interest" min="0" step="0.01" value="0"></div></div><div class="col-md-4"><div class="mb-3"><label for="bank-debt-installment-count" class="form-label">Taksit Sayısı</label><input type="number" class="form-control" id="bank-debt-installment-count" min="1" step="1" value="1"></div></div><div class="col-md-4"><div class="mb-3"><label for="bank-debt-first-date" class="form-label">İlk Taksit Tarihi</label><input type="date" class="form-control" id="bank-debt-first-date"></div></div></div><div class="mb-3"><label for="bank-debt-description" class="form-label">Açıklama (Opsiyonel)</label><textarea class="form-control" id="bank-debt-description" rows="2"></textarea></div><div class="alert alert-info"><small><i class="fas fa-info-circle me-1"></i> Taksit bilgileri kaydedildikten sonra otomatik oluşturulacaktır.</small></div></form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" id="save-bank-debt">Kaydet</button></div></div></div>
+    </div>
+
+    <!-- Taksit Listesi Modal -->
+    <div class="modal fade" id="installmentListModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title" id="installmentListTitle">Taksitler</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body" id="installmentListBody"><div class="text-center"><i class="fas fa-spinner fa-spin"></i> Yükleniyor...</div></div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Taksit Ödeme Onayı Modal -->
+    <div class="modal fade" id="payInstallmentModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Taksit Ödemesi Onayı</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><p><strong>Borç:</strong> <span id="pay-installment-debt-name"></span></p><p><strong>Taksit Tutarı:</strong> <span id="pay-installment-amount"></span></p><p><strong>Vade Tarihi:</strong> <span id="pay-installment-due"></span></p><button class="btn btn-success w-100" id="confirm-pay-installment">Ödemeyi Onayla</button></div></div></div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="successToast" class="toast" role="alert"><div class="toast-header bg-success text-white"><i class="fas fa-check-circle me-2"></i><strong class="me-auto">Başarılı</strong><button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button></div><div class="toast-body" id="successToastBody">İşlem başarıyla kaydedildi.</div></div>
+        <div id="errorToast" class="toast" role="alert"><div class="toast-header bg-danger text-white"><i class="fas fa-exclamation-circle me-2"></i><strong class="me-auto">Hata</strong><button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button></div><div class="toast-body" id="errorToastBody">Bir hata oluştu. Lütfen tekrar deneyin.</div></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ===== TAM JAVASCRIPT KODU (ORİJİNAL + SONRAKİ AYA TAŞI + TAKSİT ÖDEME) =====
+        let appData = {
+            accounts: [],
+            transactions: [],
+            debts: [],
+            receivables: [],
+            bankDebts: [],
+            settings: { currency: 'TRY', language: 'tr', dateFormat: 'DD.MM.YYYY', darkMode: false, aiAdviceEnabled: true },
+            categories: { income: ['Maaş', 'Freelance', 'Yatırım Geliri', 'Kira Geliri', 'Altın Geliri', 'Hediye', 'Diğer'], expense: ['Kira', 'Fatura', 'Market', 'Ulaşım', 'Eğlence', 'Sağlık', 'Eğitim', 'Giyim', 'Yemek', 'Yatırım', 'Altın Alımı', 'Diğer'] }
+        };
+        const aiAdviceTips = [
+            "Gelirinizin en az %20'sini birikime ayırmayı hedefleyin.",
+            "Acil durum fonunuzun en az 3 aylık giderlerinizi karşılayacak kadar olmasına dikkat edin.",
+            "Kredi kartı borçlarınızı her zaman zamanında ödeyin, faiz ödemekten kaçın.",
+            "Yüksek faizli borçlarınızı önceliklendirin ve mümkün olan en kısa sürede kapatın.",
+            "Bütçenizi aylık olarak gözden geçirin ve gereksiz harcamaları azaltın.",
+            "Uzun vadeli yatırımlar için düzenli bir plan oluşturun.",
+            "Birden fazla gelir kaynağı oluşturmaya çalışın.",
+            "Büyük alımlar yapmadan önce en az 24 saat bekleyin.",
+            "Finansal hedeflerinizi belirleyin ve bu hedeflere ulaşmak için bir plan yapın.",
+            "Harcamalarınızı takip etmek için bu uygulamayı düzenli olarak kullanın.",
+            "Yatırımlarınızı çeşitlendirerek riskinizi azaltın.",
+            "Altın yatırımları enflasyona karşı korunmak için iyi bir araçtır.",
+            "Taksitli alışverişlerde faiz oranlarına dikkat edin, toplam maliyeti hesaplayın."
+        ];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            const today = new Date().toISOString().split('T')[0];
+            ['transaction-date','debt-date','debt-due-date','receivable-date','receivable-due-date','bank-debt-first-date'].forEach(id => {
+                document.getElementById(id).value = today;
+            });
+
+            // "Sonraki Ay" butonu
+            document.getElementById('nextMonthBtn').addEventListener('click', function() {
+                const dateInput = document.getElementById('transaction-date');
+                let date = new Date(dateInput.value);
+                if (isNaN(date)) date = new Date();
+                date.setMonth(date.getMonth() + 1);
+                dateInput.value = formatDate(date);
+            });
+
+            // Menü linkleri
+            document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.querySelectorAll('.sidebar-menu a').forEach(item => item.classList.remove('active'));
+                    this.classList.add('active');
+                    const page = this.getAttribute('data-page');
+                    showPage(page);
+                    if (window.innerWidth < 992) closeMobileMenu();
+                });
+            });
+
+            document.getElementById('mobileMenuBtn').addEventListener('click', toggleMobileMenu);
+            document.getElementById('mobileDashboardBtn').addEventListener('click', function() { showPage('dashboard'); if (window.innerWidth < 992) closeMobileMenu(); });
+            document.getElementById('sidebarOverlay').addEventListener('click', closeMobileMenu);
+
+            // Kaydet butonları
+            document.getElementById('save-account').addEventListener('click', saveAccount);
+            document.getElementById('save-transaction').addEventListener('click', saveTransaction);
+            document.getElementById('save-debt').addEventListener('click', saveDebt);
+            document.getElementById('save-receivable').addEventListener('click', saveReceivable);
+            document.getElementById('save-bank-debt').addEventListener('click', saveBankDebt);
+            document.getElementById('save-settings').addEventListener('click', saveSettings);
+
+            document.getElementById('transaction-type').addEventListener('change', updateTransactionForm);
+            document.getElementById('addTransactionModal').addEventListener('show.bs.modal', updateTransactionForm);
+
+            // Veri yönetimi
+            document.getElementById('export-all-data').addEventListener('click', exportAllData);
+            document.getElementById('import-data-btn').addEventListener('click', () => document.getElementById('import-data-file').click());
+            document.getElementById('import-data-file').addEventListener('change', importData);
+            document.getElementById('reset-all-data').addEventListener('click', resetAllData);
+            document.getElementById('exportData').addEventListener('click', exportAllData);
+            document.getElementById('deleteAllData').addEventListener('click', resetAllData);
+
+            // Raporlar
+            document.getElementById('generate-report').addEventListener('click', generateReport);
+            document.getElementById('export-report-csv').addEventListener('click', exportReportCSV);
+
+            // Filtreler
+            document.querySelectorAll('[data-account-filter]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('[data-account-filter]').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    filterAccounts(this.getAttribute('data-account-filter'));
+                });
+            });
+            document.querySelectorAll('[data-investment-filter]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('[data-investment-filter]').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    filterInvestments(this.getAttribute('data-investment-filter'));
+                });
+            });
+            document.querySelectorAll('[data-debt-filter]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('[data-debt-filter]').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    filterDebts(this.getAttribute('data-debt-filter'));
+                });
+            });
+            document.querySelectorAll('[data-receivable-filter]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('[data-receivable-filter]').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    filterReceivables(this.getAttribute('data-receivable-filter'));
+                });
+            });
+            document.querySelectorAll('[data-bankdebt-filter]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('[data-bankdebt-filter]').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    filterBankDebts(this.getAttribute('data-bankdebt-filter'));
+                });
+            });
+
+            // Kategori yönetimi
+            document.getElementById('add-income-category').addEventListener('click', () => addCategory('income'));
+            document.getElementById('add-expense-category').addEventListener('click', () => addCategory('expense'));
+
+            // Karanlık mod
+            document.getElementById('dark-mode').addEventListener('change', function() {
+                document.body.classList.toggle('dark-mode', this.checked);
+            });
+
+            // Taksit ödeme onayı
+            document.getElementById('confirm-pay-installment').addEventListener('click', confirmPayInstallment);
+
+            // AI
+            setInterval(updateAIAdvice, 30000);
+
+            // Arama
+            document.getElementById('search-transaction').addEventListener('click', searchTransactions);
+            document.getElementById('transaction-search').addEventListener('keyup', function(e) { if (e.key === 'Enter') searchTransactions(); });
+
+            // İlk gösterim
+            showPage('dashboard');
+            updateDashboard();
+            updateAIAdvice();
+            window.addEventListener('resize', handleResize);
+        });
+
+        // ---- Yardımcı Fonksiyonlar ----
+        function toggleMobileMenu() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('sidebarOverlay').classList.toggle('active'); }
+        function closeMobileMenu() { document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebarOverlay').classList.remove('active'); }
+        function handleResize() { if (window.innerWidth >= 992) closeMobileMenu(); }
+
+        function formatCurrency(amount) {
+            const c = appData.settings.currency;
+            if (c === 'USD') return '$' + amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+            if (c === 'EUR') return '€' + amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+            if (c === 'GBP') return '£' + amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+            return '₺' + amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        }
+        function formatDate(date) { return date.toISOString().split('T')[0]; }
+        function formatDisplayDate(d) {
+            const dt = new Date(d);
+            if (appData.settings.dateFormat === 'DD.MM.YYYY') return dt.toLocaleDateString('tr-TR');
+            if (appData.settings.dateFormat === 'DD/MM/YYYY') return dt.toLocaleDateString('en-GB');
+            return d;
+        }
+        function getAccountName(id) { const acc = appData.accounts.find(a => a.id === id); return acc ? acc.name : null; }
+        function getAccountTypeName(type) { const map = { cash:'Nakit', bank:'Banka Hesabı', card:'Kredi Kartı', savings:'Birikim Hesabı', investment:'Yatırım Hesabı', gold:'Altın Hesabı', other:'Diğer' }; return map[type] || type; }
+        function getAccountIcon(type) { const map = { cash:'fas fa-money-bill-wave', bank:'fas fa-university', card:'fas fa-credit-card', savings:'fas fa-piggy-bank', investment:'fas fa-chart-line', gold:'fas fa-coins', other:'fas fa-wallet' }; return map[type] || 'fas fa-wallet'; }
+        function getTransactionTypeText(type) { const map = { income:'Gelir', expense:'Gider', transfer:'Transfer' }; return map[type] || type; }
+        function getDebtStatusText(status) { const map = { pending:'Bekliyor', paid:'Ödendi', overdue:'Gecikmiş' }; return map[status] || status; }
+        function getBankDebtTypeText(type) { const map = { 'credit-card':'Kredi Kartı', loan:'Kredi', installment:'Taksitli Borç', mortgage:'Mortgage', other:'Diğer' }; return map[type] || type; }
+        function showToast(msg, type='success') {
+            const el = type === 'success' ? document.getElementById('successToast') : document.getElementById('errorToast');
+            const body = type === 'success' ? document.getElementById('successToastBody') : document.getElementById('errorToastBody');
+            body.textContent = msg;
+            new bootstrap.Toast(el, { autohide: true, delay: 3000 }).show();
+        }
+
+        // ---- Veri Yönetimi ----
+        function saveData() { localStorage.setItem('financeAppData', JSON.stringify(appData)); }
+        function loadData() {
+            const saved = localStorage.getItem('financeAppData');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (!parsed.categories) parsed.categories = { income: ['Maaş','Freelance','Yatırım Geliri','Kira Geliri','Altın Geliri','Hediye','Diğer'], expense: ['Kira','Fatura','Market','Ulaşım','Eğlence','Sağlık','Eğitim','Giyim','Yemek','Yatırım','Altın Alımı','Diğer'] };
+                    if (!parsed.settings) parsed.settings = { currency:'TRY', language:'tr', dateFormat:'DD.MM.YYYY', darkMode:false, aiAdviceEnabled:true };
+                    parsed.bankDebts.forEach(b => { if (!b.installments) { b.installments = [{ dueDate: new Date().toISOString().split('T')[0], amount: b.currentAmount || b.totalAmount || 0, status: 'pending' }]; } });
+                    appData = parsed;
+                    if (appData.settings.darkMode) { document.body.classList.add('dark-mode'); document.getElementById('dark-mode').checked = true; }
+                    renderAccounts(); renderTransactions(); renderInvestments(); renderDebts(); renderReceivables(); renderBankDebts(); loadSettings(); updateCategoryUI();
+                } catch(e) { console.error('Veri yüklenirken hata:', e); addDefaultData(); }
+            } else { addDefaultData(); }
+        }
+        function addDefaultData() {
+            appData.accounts = [
+                { id:1, name:'Nakit', type:'cash', balance:1000, currency:'TRY', description:'Cüzdan' },
+                { id:2, name:'Ana Banka', type:'bank', balance:5000, currency:'TRY', description:'Ana hesap' },
+                { id:3, name:'Kredi Kartı', type:'card', balance:-1500, currency:'TRY', description:'Kart' },
+                { id:4, name:'Borsa', type:'investment', balance:10000, currency:'TRY', description:'Hisse' },
+                { id:5, name:'Altın', type:'gold', balance:50, currency:'XAU', description:'Gram' }
+            ];
+            const t = new Date(), y = new Date(t); y.setDate(y.getDate()-1); const lw = new Date(t); lw.setDate(lw.getDate()-7);
+            appData.transactions = [
+                { id:1, type:'income', amount:12500, category:'Maaş', date:formatDate(t), accountId:2, description:'Maaş' },
+                { id:2, type:'expense', amount:850, category:'Market', date:formatDate(y), fromAccountId:1, description:'Market' },
+                { id:3, type:'expense', amount:250, category:'Ulaşım', date:formatDate(lw), fromAccountId:1, description:'Ulaşım' },
+                { id:4, type:'expense', amount:5000, category:'Yatırım', date:formatDate(lw), fromAccountId:4, description:'Yatırım' }
+            ];
+            const nw = new Date(t); nw.setDate(nw.getDate()+7);
+            appData.debts = [{ id:1, person:'Ahmet Yılmaz', amount:1000, date:formatDate(lw), dueDate:formatDate(nw), status:'pending', description:'Borç' }];
+            appData.receivables = [{ id:1, person:'Mehmet Demir', amount:500, date:formatDate(lw), dueDate:formatDate(nw), status:'pending', description:'Alacak' }];
+            appData.bankDebts = [{ id:1, name:'Kredi Kartı Borcu', type:'credit-card', totalAmount:5000, currentAmount:1500, interestRate:1.5, description:'Kart borcu', installments:[] }];
+            saveData();
+        }
+
+        // ---- Sayfa Geçişi ----
+        function showPage(page) {
+            document.querySelectorAll('.page-content').forEach(p => p.classList.add('d-none'));
+            document.getElementById(page+'-page').classList.remove('d-none');
+            switch(page) {
+                case 'dashboard': updateDashboard(); break;
+                case 'accounts': renderAccounts(); break;
+                case 'transactions': renderTransactions(); break;
+                case 'investments': renderInvestments(); createInvestmentDistributionChart(); break;
+                case 'debts': renderDebts(); break;
+                case 'receivables': renderReceivables(); break;
+                case 'bank-debts': renderBankDebts(); break;
+                case 'reports': generateReport(); break;
+                case 'settings': loadSettings(); updateCategoryUI(); break;
+            }
+        }
+
+        // ---- Hesaplar ----
+        function renderAccounts(filter='all') {
+            const container = document.getElementById('accounts-list');
+            let list = appData.accounts;
+            if (filter !== 'all') list = list.filter(a => a.type === filter);
+            if (!list.length) { container.innerHTML = `<div class="col-12"><div class="empty-state"><i class="far fa-credit-card"></i><h5>Henüz hesap eklenmemiş</h5><p class="text-muted">"Yeni Hesap Ekle" butonuna tıklayın</p></div></div>`; return; }
+            let html = '';
+            list.forEach(a => {
+                const icon = getAccountIcon(a.type);
+                const balClass = a.balance >= 0 ? 'positive-balance' : 'negative-balance';
+                const balText = a.currency === 'XAU' ? `${a.balance.toFixed(2)} gr` : formatCurrency(a.balance);
+                html += `<div class="col-xl-3 col-lg-4 col-md-6 mb-4"><div class="card dashboard-card ${a.type==='investment'?'investment-card':a.type==='gold'?'gold-card':''}"><div class="card-body">
+                    <div class="d-flex justify-content-between"><div><h5 class="card-title">${a.name}</h5><p class="text-muted mb-1">${getAccountTypeName(a.type)}</p></div><div style="font-size:2rem;"><i class="${icon}"></i></div></div>
+                    <div class="account-balance ${balClass} mt-3">${balText}</div>
+                    ${a.description ? `<p class="card-text mt-2 small">${a.description}</p>` : ''}
+                    <div class="d-flex justify-content-between mt-3"><button class="btn btn-sm edit-btn" onclick="editAccount(${a.id})"><i class="fas fa-edit me-1"></i> Düzenle</button><button class="btn btn-sm btn-outline-danger" onclick="deleteAccount(${a.id})"><i class="fas fa-trash me-1"></i> Sil</button></div>
+                </div></div></div>`;
+            });
+            container.innerHTML = html;
+        }
+        function filterAccounts(filter) { renderAccounts(filter); }
+        function editAccount(id) {
+            const a = appData.accounts.find(x => x.id === id);
+            if (!a) return;
+            document.getElementById('edit-account-id').value = a.id;
+            document.getElementById('account-name').value = a.name;
+            document.getElementById('account-type').value = a.type;
+            document.getElementById('account-balance').value = a.balance;
+            document.getElementById('account-currency').value = a.currency;
+            document.getElementById('account-description').value = a.description || '';
+            document.getElementById('accountModalTitle').textContent = 'Hesap Düzenle';
+            new bootstrap.Modal(document.getElementById('addAccountModal')).show();
+        }
+        function saveAccount() {
+            const id = document.getElementById('edit-account-id').value;
+            const name = document.getElementById('account-name').value.trim();
+            const type = document.getElementById('account-type').value;
+            const balance = parseFloat(document.getElementById('account-balance').value) || 0;
+            const currency = document.getElementById('account-currency').value;
+            const description = document.getElementById('account-description').value.trim();
+            if (!name || !type) { showToast('Hesap adı ve türü girin.', 'error'); return; }
+            if (id) {
+                const idx = appData.accounts.findIndex(a => a.id == id);
+                if (idx !== -1) appData.accounts[idx] = { ...appData.accounts[idx], name, type, balance, currency, description };
+                showToast('Hesap güncellendi.', 'success');
+            } else {
+                appData.accounts.push({ id: Date.now(), name, type, balance, currency, description });
+                showToast('Hesap eklendi.', 'success');
+            }
+            saveData();
+            bootstrap.Modal.getInstance(document.getElementById('addAccountModal')).hide();
+            document.getElementById('addAccountForm').reset();
+            document.getElementById('edit-account-id').value = '';
+            document.getElementById('accountModalTitle').textContent = 'Yeni Hesap Ekle';
+            renderAccounts();
+            renderInvestments();
+            updateDashboard();
+            updateAIAdvice();
+        }
+        function deleteAccount(id) {
+            if (!confirm('Hesap ve ilişkili işlemler silinecek. Emin misiniz?')) return;
+            appData.accounts = appData.accounts.filter(a => a.id !== id);
+            appData.transactions = appData.transactions.filter(t => t.accountId !== id && t.fromAccountId !== id && t.toAccountId !== id);
+            saveData();
+            renderAccounts(); renderInvestments(); updateDashboard(); updateAIAdvice();
+            showToast('Hesap silindi.', 'success');
+        }
+
+        // ---- İşlemler ----
+        function updateTransactionForm() {
+            const type = document.getElementById('transaction-type').value;
+            const cat = document.getElementById('transaction-category');
+            cat.innerHTML = '<option value="">Seçiniz</option>';
+            if (type === 'income') appData.categories.income.forEach(c => cat.innerHTML += `<option value="${c}">${c}</option>`);
+            else if (type === 'expense') appData.categories.expense.forEach(c => cat.innerHTML += `<option value="${c}">${c}</option>`);
+            else if (type === 'transfer') cat.innerHTML = '<option value="transfer">Hesap Transferi</option>';
+            const from = document.getElementById('from-account'), to = document.getElementById('to-account'), inc = document.getElementById('income-account');
+            [from, to, inc].forEach(sel => {
+                sel.innerHTML = '<option value="">Seçiniz</option>';
+                appData.accounts.forEach(a => {
+                    const txt = `${a.name} (${getAccountTypeName(a.type)}) - ${a.currency === 'XAU' ? a.balance.toFixed(2)+' gr' : formatCurrency(a.balance)}`;
+                    sel.innerHTML += `<option value="${a.id}">${txt}</option>`;
+                });
+            });
+            document.getElementById('from-account-container').classList.toggle('d-none', type !== 'expense' && type !== 'transfer');
+            document.getElementById('to-account-container').classList.toggle('d-none', type !== 'transfer');
+            document.getElementById('income-account-container').classList.toggle('d-none', type !== 'income');
+        }
+        function renderTransactions(list) {
+            const tbody = document.getElementById('transactions-table-body');
+            const mobile = document.getElementById('mobile-transactions-list');
+            const data = list || appData.transactions;
+            if (!data.length) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center"><div class="empty-state py-5"><i class="far fa-exchange-alt"></i><h5>Henüz işlem yok</h5></div></td></tr>`;
+                mobile.innerHTML = `<div class="empty-state"><i class="far fa-exchange-alt"></i><h5>Henüz işlem yok</h5></div>`;
+                return;
+            }
+            const sorted = [...data].sort((a,b) => new Date(b.date) - new Date(a.date));
+            let html = '';
+            sorted.forEach(t => {
+                const acc = getAccountName(t.accountId || t.fromAccountId);
+                const sign = t.type === 'income' ? '+' : '-';
+                const color = t.type === 'income' ? 'text-success' : 'text-danger';
+                html += `<tr class="transaction-type-${t.type}">
+                    <td>${formatDisplayDate(t.date)}</td><td>${t.description || '-'}</td><td>${t.category}</td><td>${acc || '-'}</td>
+                    <td class="text-end fw-bold ${color}">${sign}${formatCurrency(t.amount)}</td>
+                    <td class="text-center"><button class="btn btn-sm edit-btn me-1" onclick="editTransaction(${t.id})"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-outline-danger" onclick="deleteTransaction(${t.id})"><i class="fas fa-trash"></i></button></td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+            let mhtml = '';
+            sorted.forEach(t => {
+                const acc = getAccountName(t.accountId || t.fromAccountId);
+                const border = t.type === 'income' ? 'success' : t.type === 'expense' ? 'danger' : 'info';
+                mhtml += `<div class="mobile-transaction-card" style="border-left-color:var(--${border}-color);">
+                    <div class="d-flex justify-content-between"><div><h6 class="mb-1">${t.description || '-'}</h6><small>${formatDisplayDate(t.date)}</small></div><span class="badge ${t.type === 'income' ? 'bg-success' : 'bg-danger'}">${getTransactionTypeText(t.type)}</span></div>
+                    <div class="row"><div class="col-6"><small>Kategori</small><p class="mb-1">${t.category}</p></div><div class="col-6"><small>Hesap</small><p class="mb-1">${acc || '-'}</p></div></div>
+                    <div class="d-flex justify-content-between"><h5 class="mb-0 ${t.type === 'income' ? 'text-success' : 'text-danger'}">${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}</h5>
+                    <div><button class="btn btn-sm edit-btn me-1" onclick="editTransaction(${t.id})"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-outline-danger" onclick="deleteTransaction(${t.id})"><i class="fas fa-trash"></i></button></div></div>
+                </div>`;
+            });
+            mobile.innerHTML = mhtml;
+        }
+        function searchTransactions() {
+            const term = document.getElementById('transaction-search').value.toLowerCase().trim();
+            if (!term) { renderTransactions(); return; }
+            const filtered = appData.transactions.filter(t => {
+                const desc = (t.description||'').toLowerCase();
+                const cat = (t.category||'').toLowerCase();
+                const acc = (getAccountName(t.accountId || t.fromAccountId)||'').toLowerCase();
+                return desc.includes(term) || cat.includes(term) || acc.includes(term);
+            });
+            renderTransactions(filtered);
+        }
+        function editTransaction(id) {
+            const t = appData.transactions.find(x => x.id === id);
+            if (!t) return;
+            document.getElementById('edit-transaction-id').value = t.id;
+            document.getElementById('transaction-type').value = t.type;
+            document.getElementById('transaction-amount').value = t.amount;
+            document.getElementById('transaction-category').value = t.category;
+            document.getElementById('transaction-date').value = t.date;
+            document.getElementById('transaction-description').value = t.description || '';
+            updateTransactionForm();
+            setTimeout(() => {
+                if (t.type === 'income') document.getElementById('income-account').value = t.accountId;
+                else if (t.type === 'expense') document.getElementById('from-account').value = t.fromAccountId;
+                else if (t.type === 'transfer') { document.getElementById('from-account').value = t.fromAccountId; document.getElementById('to-account').value = t.toAccountId; }
+            }, 100);
+            document.getElementById('transactionModalTitle').textContent = 'İşlem Düzenle';
+            new bootstrap.Modal(document.getElementById('addTransactionModal')).show();
+        }
+        function saveTransaction() {
+            const id = document.getElementById('edit-transaction-id').value;
+            const type = document.getElementById('transaction-type').value;
+            const amount = parseFloat(document.getElementById('transaction-amount').value);
+            const category = document.getElementById('transaction-category').value;
+            const date = document.getElementById('transaction-date').value;
+            const description = document.getElementById('transaction-description').value.trim();
+            if (!type || !amount || !category || !date) { showToast('Tüm alanları doldurun.', 'error'); return; }
+            let accountId=null, fromAccountId=null, toAccountId=null;
+            if (type === 'income') { accountId = parseInt(document.getElementById('income-account').value); if (!accountId) { showToast('Hesap seçin.', 'error'); return; } }
+            else if (type === 'expense') { fromAccountId = parseInt(document.getElementById('from-account').value); if (!fromAccountId) { showToast('Hesap seçin.', 'error'); return; } }
+            else if (type === 'transfer') { fromAccountId = parseInt(document.getElementById('from-account').value); toAccountId = parseInt(document.getElementById('to-account').value); if (!fromAccountId || !toAccountId || fromAccountId === toAccountId) { showToast('Geçerli hesaplar seçin.', 'error'); return; } }
+            if (id) {
+                const idx = appData.transactions.findIndex(x => x.id == id);
+                if (idx !== -1) {
+                    const old = appData.transactions[idx];
+                    if (old.type === 'income') updateAccountBalance(old.accountId, -old.amount);
+                    else if (old.type === 'expense') updateAccountBalance(old.fromAccountId, old.amount);
+                    else if (old.type === 'transfer') { updateAccountBalance(old.fromAccountId, old.amount); updateAccountBalance(old.toAccountId, -old.amount); }
+                    appData.transactions[idx] = { id: parseInt(id), type, amount, category, date, description, accountId, fromAccountId, toAccountId };
+                    if (type === 'income') updateAccountBalance(accountId, amount);
+                    else if (type === 'expense') updateAccountBalance(fromAccountId, -amount);
+                    else if (type === 'transfer') { updateAccountBalance(fromAccountId, -amount); updateAccountBalance(toAccountId, amount); }
+                    showToast('İşlem güncellendi.', 'success');
+                }
+            } else {
+                const newT = { id: Date.now(), type, amount, category, date, description, accountId, fromAccountId, toAccountId };
+                appData.transactions.push(newT);
+                if (type === 'income') updateAccountBalance(accountId, amount);
+                else if (type === 'expense') updateAccountBalance(fromAccountId, -amount);
+                else if (type === 'transfer') { updateAccountBalance(fromAccountId, -amount); updateAccountBalance(toAccountId, amount); }
+                showToast('İşlem eklendi.', 'success');
+            }
+            saveData();
+            bootstrap.Modal.getInstance(document.getElementById('addTransactionModal')).hide();
+            document.getElementById('addTransactionForm').reset();
+            document.getElementById('edit-transaction-id').value = '';
+            document.getElementById('transactionModalTitle').textContent = 'Yeni İşlem Ekle';
+            renderTransactions();
+            updateDashboard();
+            updateAIAdvice();
+        }
+        function deleteTransaction(id) {
+            if (!confirm('İşlem silinecek. Emin misiniz?')) return;
+            const t = appData.transactions.find(x => x.id === id);
+            if (t) {
+                if (t.type === 'income') updateAccountBalance(t.accountId, -t.amount);
+                else if (t.type === 'expense') updateAccountBalance(t.fromAccountId, t.amount);
+                else if (t.type === 'transfer') { updateAccountBalance(t.fromAccountId, t.amount); updateAccountBalance(t.toAccountId, -t.amount); }
+                appData.transactions = appData.transactions.filter(x => x.id !== id);
+                saveData();
+                renderTransactions(); updateDashboard(); updateAIAdvice();
+                showToast('İşlem silindi.', 'success');
+            }
+        }
+        function updateAccountBalance(accId, amount) {
+            const a = appData.accounts.find(x => x.id === accId);
+            if (a) { a.balance += amount; saveData(); }
+        }
+
+        // ---- Yatırımlar ----
+        function renderInvestments(filter='all') {
+            const container = document.getElementById('investments-list');
+            let list = appData.accounts.filter(a => a.type === 'investment' || a.type === 'gold');
+            if (filter !== 'all') list = list.filter(a => a.type === filter);
+            if (!list.length) { container.innerHTML = `<div class="col-12"><div class="empty-state"><i class="fas fa-chart-line"></i><h5>Henüz yatırım hesabı yok</h5></div></div>`; return; }
+            let html = '';
+            list.forEach(a => {
+                const icon = getAccountIcon(a.type);
+                const balClass = a.balance >= 0 ? 'positive-balance' : 'negative-balance';
+                const balText = a.currency === 'XAU' ? `${a.balance.toFixed(2)} gr` : formatCurrency(a.balance);
+                let tl = a.balance;
+                if (a.currency === 'USD') tl *= 32;
+                else if (a.currency === 'EUR') tl *= 35;
+                else if (a.currency === 'XAU') tl *= 2200;
+                html += `<div class="col-xl-4 col-lg-6 col-md-6 mb-4"><div class="card dashboard-card ${a.type==='investment'?'investment-card':'gold-card'}"><div class="card-body">
+                    <div class="d-flex justify-content-between"><div><h5 class="card-title">${a.name}</h5><p class="text-muted mb-1">${getAccountTypeName(a.type)}</p></div><div style="font-size:2rem;"><i class="${icon}"></i></div></div>
+                    <div class="account-balance ${balClass} mt-3">${balText}</div>
+                    <div class="mt-2"><small class="text-muted">TL Değeri:</small><p class="mb-0 fw-bold">${formatCurrency(tl)}</p></div>
+                    ${a.description ? `<p class="card-text mt-2 small">${a.description}</p>` : ''}
+                    <div class="d-flex justify-content-between mt-3"><button class="btn btn-sm edit-btn" onclick="editAccount(${a.id})"><i class="fas fa-edit me-1"></i> Düzenle</button><button class="btn btn-sm btn-outline-danger" onclick="deleteAccount(${a.id})"><i class="fas fa-trash me-1"></i> Sil</button></div>
+                </div></div></div>`;
+            });
+            container.innerHTML = html;
+        }
+        function filterInvestments(filter) { renderInvestments(filter); }
+
+        // ---- Borçlar ----
+        function updateDebtStatuses() {
+            const today = new Date(); today.setHours(0,0,0,0);
+            appData.debts.forEach(d => {
+                if (d.status !== 'paid') {
+                    const due = new Date(d.dueDate); due.setHours(0,0,0,0);
+                    if (due < today) d.status = 'overdue';
+                }
+            });
+            saveData();
+        }
+        function renderDebts(filter='all') {
+            updateDebtStatuses();
+            const container = document.getElementById('debts-list');
+            let list = appData.debts;
+            if (filter !== 'all') list = list.filter(d => d.status === filter);
+            if (!list.length) { container.innerHTML = `<div class="col-12"><div class="empty-state"><i class="far fa-hand-holding-usd"></i><h5>Henüz borç yok</h5></div></div>`; return; }
+            let html = '';
+            list.forEach(d => {
+                const cls = `status-${d.status}`;
+                const txt = getDebtStatusText(d.status);
+                html += `<div class="col-xl-4 col-lg-6 col-md-6 mb-4"><div class="card dashboard-card"><div class="card-body">
+                    <div class="d-flex justify-content-between"><div><h5 class="card-title">${d.person}</h5><p class="text-muted mb-1">Vade: ${formatDisplayDate(d.dueDate)}</p></div><span class="badge ${cls}">${txt}</span></div>
+                    <div class="account-balance text-warning mt-3">${formatCurrency(d.amount)}</div>
+                    ${d.description ? `<p class="card-text mt-2 small">${d.description}</p>` : ''}
+                    <div class="d-flex justify-content-between mt-3"><button class="btn btn-sm edit-btn me-1" onclick="editDebt(${d.id})"><i class="fas fa-edit me-1"></i> Düzenle</button>
+                    <div>${d.status !== 'paid' ? `<button class="btn btn-sm btn-outline-success me-1" onclick="markDebtAsPaid(${d.id})"><i class="fas fa-check me-1"></i> Ödendi</button>` : ''}<button class="btn btn-sm btn-outline-danger" onclick="deleteDebt(${d.id})"><i class="fas fa-trash me-1"></i> Sil</button></div></div>
+                </div></div></div>`;
+            });
+            container.innerHTML = html;
+        }
+        function filterDebts(filter) { renderDebts(filter); }
+        function editDebt(id) {
+            const d = appData.debts.find(x => x.id === id);
+            if (!d) return;
+            document.getElementById('edit-debt-id').value = d.id;
+            document.getElementById('debt-person').value = d.person;
+            document.getElementById('debt-amount').value = d.amount;
+            document.getElementById('debt-date').value = d.date;
+            document.getElementById('debt-due-date').value = d.dueDate;
+            document.getElementById('debt-description').value = d.description || '';
+            document.getElementById('debtModalTitle').textContent = 'Borç Düzenle';
+            new bootstrap.Modal(document.getElementById('addDebtModal')).show();
+        }
+        function saveDebt() {
+            const id = document.getElementById('edit-debt-id').value;
+            const person = document.getElementById('debt-person').value.trim();
+            const amount = parseFloat(document.getElementById('debt-amount').value);
+            const date = document.getElementById('debt-date').value;
+            const dueDate = document.getElementById('debt-due-date').value;
+            const description = document.getElementById('debt-description').value.trim();
+            if (!person || !amount || !date || !dueDate) { showToast('Tüm alanları doldurun.', 'error'); return; }
+            if (id) {
+                const idx = appData.debts.findIndex(x => x.id == id);
+                if (idx !== -1) appData.debts[idx] = { ...appData.debts[idx], person, amount, date, dueDate, description };
+                showToast('Borç güncellendi.', 'success');
+            } else {
+                appData.debts.push({ id: Date.now(), person, amount, date, dueDate, status: 'pending', description });
+                showToast('Borç eklendi.', 'success');
+            }
+            saveData();
+            bootstrap.Modal.getInstance(document.getElementById('addDebtModal')).hide();
+            document.getElementById('addDebtForm').reset();
+            document.getElementById('edit-debt-id').value = '';
+            document.getElementById('debtModalTitle').textContent = 'Yeni Borç Ekle';
+            renderDebts(); updateDashboard(); updateAIAdvice();
+        }
+        function markDebtAsPaid(id) {
+            const d = appData.debts.find(x => x.id === id);
+            if (d) { d.status = 'paid'; saveData(); renderDebts(); updateDashboard(); updateAIAdvice(); showToast('Borç ödendi.', 'success'); }
+        }
+        function deleteDebt(id) {
+            if (!confirm('Borç silinecek. Emin misiniz?')) return;
+            appData.debts = appData.debts.filter(x => x.id !== id);
+            saveData(); renderDebts(); updateDashboard(); updateAIAdvice(); showToast('Borç silindi.', 'success');
+        }
+
+        // ---- Alacaklar ----
+        function updateReceivableStatuses() {
+            const today = new Date(); today.setHours(0,0,0,0);
+            appData.receivables.forEach(r => {
+                if (r.status !== 'paid') {
+                    const due = new Date(r.dueDate); due.setHours(0,0,0,0);
+                    if (due < today) r.status = 'overdue';
+                }
+            });
+            saveData();
+        }
+        function renderReceivables(filter='all') {
+            updateReceivableStatuses();
+            const container = document.getElementById('receivables-list');
+            let list = appData.receivables;
+            if (filter !== 'all') list = list.filter(r => r.status === filter);
+            if (!list.length) { container.innerHTML = `<div class="col-12"><div class="empty-state"><i class="far fa-handshake"></i><h5>Henüz alacak yok</h5></div></div>`; return; }
+            let html = '';
+            list.forEach(r => {
+                const cls = `status-${r.status}`;
+                const txt = getDebtStatusText(r.status);
+                html += `<div class="col-xl-4 col-lg-6 col-md-6 mb-4"><div class="card dashboard-card"><div class="card-body">
+                    <div class="d-flex justify-content-between"><div><h5 class="card-title">${r.person}</h5><p class="text-muted mb-1">Vade: ${formatDisplayDate(r.dueDate)}</p></div><span class="badge ${cls}">${txt}</span></div>
+                    <div class="account-balance text-success mt-3">${formatCurrency(r.amount)}</div>
+                    ${r.description ? `<p class="card-text mt-2 small">${r.description}</p>` : ''}
+                    <div class="d-flex justify-content-between mt-3"><button class="btn btn-sm edit-btn me-1" onclick="editReceivable(${r.id})"><i class="fas fa-edit me-1"></i> Düzenle</button>
+                    <div>${r.status !== 'paid' ? `<button class="btn btn-sm btn-outline-success me-1" onclick="markReceivableAsPaid(${r.id})"><i class="fas fa-check me-1"></i> Tahsil Edildi</button>` : ''}<button class="btn btn-sm btn-outline-danger" onclick="deleteReceivable(${r.id})"><i class="fas fa-trash me-1"></i> Sil</button></div></div>
+                </div></div></div>`;
+            });
+            container.innerHTML = html;
+        }
+        function filterReceivables(filter) { renderReceivables(filter); }
+        function editReceivable(id) {
+            const r = appData.receivables.find(x => x.id === id);
+            if (!r) return;
+            document.getElementById('edit-receivable-id').value = r.id;
+            document.getElementById('receivable-person').value = r.person;
+            document.getElementById('receivable-amount').value = r.amount;
+            document.getElementById('receivable-date').value = r.date;
+            document.getElementById('receivable-due-date').value = r.dueDate;
+            document.getElementById('receivable-description').value = r.description || '';
+            document.getElementById('receivableModalTitle').textContent = 'Alacak Düzenle';
+            new bootstrap.Modal(document.getElementById('addReceivableModal')).show();
+        }
+        function saveReceivable() {
+            const id = document.getElementById('edit-receivable-id').value;
+            const person = document.getElementById('receivable-person').value.trim();
+            const amount = parseFloat(document.getElementById('receivable-amount').value);
+            const date = document.getElementById('receivable-date').value;
+            const dueDate = document.getElementById('receivable-due-date').value;
+            const description = document.getElementById('receivable-description').value.trim();
+            if (!person || !amount || !date || !dueDate) { showToast('Tüm alanları doldurun.', 'error'); return; }
+            if (id) {
+                const idx = appData.receivables.findIndex(x => x.id == id);
+                if (idx !== -1) appData.receivables[idx] = { ...appData.receivables[idx], person, amount, date, dueDate, description };
+                showToast('Alacak güncellendi.', 'success');
+            } else {
+                appData.receivables.push({ id: Date.now(), person, amount, date, dueDate, status: 'pending', description });
+                showToast('Alacak eklendi.', 'success');
+            }
+            saveData();
+            bootstrap.Modal.getInstance(document.getElementById('addReceivableModal')).hide();
+            document.getElementById('addReceivableForm').reset();
+            document.getElementById('edit-receivable-id').value = '';
+            document.getElementById('receivableModalTitle').textContent = 'Yeni Alacak Ekle';
+            renderReceivables(); updateDashboard(); updateAIAdvice();
+        }
+        function markReceivableAsPaid(id) {
+            const r = appData.receivables.find(x => x.id === id);
+            if (r) { r.status = 'paid'; saveData(); renderReceivables(); updateDashboard(); updateAIAdvice(); showToast('Alacak tahsil edildi.', 'success'); }
+        }
+        function deleteReceivable(id) {
+            if (!confirm('Alacak silinecek. Emin misiniz?')) return;
+            appData.receivables = appData.receivables.filter(x => x.id !== id);
+            saveData(); renderReceivables(); updateDashboard(); updateAIAdvice(); showToast('Alacak silindi.', 'success');
+        }
+
+        // ---- Banka Borçları (Taksitlendirme) ----
+        function renderBankDebts(filter='all') {
+            const container = document.getElementById('bank-debts-list');
+            let list = appData.bankDebts;
+            if (filter !== 'all') list = list.filter(b => b.type === filter);
+            if (!list.length) { container.innerHTML = `<div class="col-12"><div class="empty-state"><i class="far fa-university"></i><h5>Henüz banka borcu yok</h5></div></div>`; return; }
+            let html = '';
+            list.forEach(b => {
+                const typeText = getBankDebtTypeText(b.type);
+                const paid = b.totalAmount - b.currentAmount;
+                const pct = b.totalAmount > 0 ? (paid / b.totalAmount) * 100 : 0;
+                const inst = b.installments || [];
+                const totalInst = inst.length;
+                const paidInst = inst.filter(i => i.status === 'paid').length;
+                const overdueInst = inst.filter(i => i.status === 'pending' && new Date(i.dueDate) < new Date()).length;
+                html += `<div class="col-xl-4 col-lg-6 col-md-6 mb-4"><div class="card dashboard-card"><div class="card-body">
+                    <div class="d-flex justify-content-between"><div><h5 class="card-title">${b.name}</h5><p class="text-muted mb-1">${typeText}</p></div>${b.interestRate > 0 ? `<span class="badge bg-warning">%${b.interestRate} Faiz</span>` : ''}</div>
+                    <div class="account-balance text-danger mt-3">${formatCurrency(b.currentAmount)} / ${formatCurrency(b.totalAmount)}</div>
+                    <div class="progress mt-2" style="height:10px;"><div class="progress-bar bg-success" style="width:${pct}%"></div></div>
+                    <div class="text-end mt-1"><small class="text-muted">%${pct.toFixed(1)} ödendi</small></div>
+                    ${b.description ? `<p class="card-text mt-2 small">${b.description}</p>` : ''}
+                    ${totalInst > 0 ? `<div class="mt-2"><small class="text-muted">Taksit: ${paidInst}/${totalInst} ödendi, ${overdueInst} gecikmiş</small></div>` : ''}
+                    <div class="d-flex flex-wrap gap-1 mt-3">
+                        <button class="btn btn-sm edit-btn" onclick="editBankDebt(${b.id})"><i class="fas fa-edit me-1"></i> Düzenle</button>
+                        ${totalInst > 0 ? `<button class="btn btn-sm btn-outline-primary" onclick="showInstallments(${b.id})"><i class="fas fa-list me-1"></i> Taksitler</button>` : ''}
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteBankDebt(${b.id})"><i class="fas fa-trash me-1"></i> Sil</button>
+                    </div>
+                </div></div></div>`;
+            });
+            container.innerHTML = html;
+        }
+        function filterBankDebts(filter) { renderBankDebts(filter); }
+
+        function showInstallments(id) {
+            const b = appData.bankDebts.find(x => x.id === id);
+            if (!b || !b.installments || !b.installments.length) { showToast('Taksit bulunamadı.', 'error'); return; }
+            const title = document.getElementById('installmentListTitle');
+            title.textContent = `${b.name} - Taksitler`;
+            const body = document.getElementById('installmentListBody');
+            let html = `<div class="list-group">`;
+            b.installments.forEach((inst, index) => {
+                const statusText = inst.status === 'paid' ? '✅ Ödendi' : (new Date(inst.dueDate) < new Date() ? '⚠️ Gecikmiş' : '⏳ Bekliyor');
+                const statusClass = inst.status === 'paid' ? 'text-success' : (new Date(inst.dueDate) < new Date() ? 'text-danger' : 'text-warning');
+                const isPaid = inst.status === 'paid';
+                html += `<div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div><strong>${index+1}. Taksit</strong><br><span class="text-muted">${formatCurrency(inst.amount)}</span> - <span class="${statusClass}">${statusText}</span><br><small>Vade: ${formatDisplayDate(inst.dueDate)}</small></div>
+                    ${!isPaid ? `<button class="btn btn-sm btn-success" onclick="payInstallment(${b.id}, ${index})"><i class="fas fa-check me-1"></i>Öde</button>` : `<span class="badge bg-secondary">Ödendi</span>`}
+                </div>`;
+            });
+            html += `</div>`;
+            body.innerHTML = html;
+            new bootstrap.Modal(document.getElementById('installmentListModal')).show();
+        }
+
+        function editBankDebt(id) {
+            const b = appData.bankDebts.find(x => x.id === id);
+            if (!b) return;
+            document.getElementById('edit-bank-debt-id').value = b.id;
+            document.getElementById('bank-debt-name').value = b.name;
+            document.getElementById('bank-debt-type').value = b.type;
+            document.getElementById('bank-debt-amount').value = b.totalAmount;
+            document.getElementById('bank-debt-current').value = b.currentAmount;
+            document.getElementById('bank-debt-interest').value = b.interestRate || 0;
+            document.getElementById('bank-debt-description').value = b.description || '';
+            document.getElementById('bank-debt-installment-count').value = b.installments ? b.installments.length : 1;
+            if (b.installments && b.installments.length) document.getElementById('bank-debt-first-date').value = b.installments[0].dueDate;
+            else document.getElementById('bank-debt-first-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('bankDebtModalTitle').textContent = 'Banka Borcu Düzenle';
+            new bootstrap.Modal(document.getElementById('addBankDebtModal')).show();
+        }
+
+        function saveBankDebt() {
+            const id = document.getElementById('edit-bank-debt-id').value;
+            const name = document.getElementById('bank-debt-name').value.trim();
+            const type = document.getElementById('bank-debt-type').value;
+            const totalAmount = parseFloat(document.getElementById('bank-debt-amount').value);
+            const currentAmount = parseFloat(document.getElementById('bank-debt-current').value);
+            const interestRate = parseFloat(document.getElementById('bank-debt-interest').value) || 0;
+            const description = document.getElementById('bank-debt-description').value.trim();
+            const installmentCount = parseInt(document.getElementById('bank-debt-installment-count').value) || 1;
+            const firstDate = document.getElementById('bank-debt-first-date').value;
+
+            if (!name || !type || !totalAmount || !currentAmount) { showToast('Tüm alanları doldurun.', 'error'); return; }
+            if (currentAmount > totalAmount) { showToast('Kalan borç toplamdan büyük olamaz.', 'error'); return; }
+
+            let installments = [];
+            if (type === 'installment' && installmentCount > 1 && firstDate) {
+                const base = totalAmount / installmentCount;
+                let date = new Date(firstDate);
+                for (let i = 0; i < installmentCount; i++) {
+                    const due = new Date(date);
+                    due.setMonth(due.getMonth() + i);
+                    installments.push({ dueDate: formatDate(due), amount: parseFloat(base.toFixed(2)), status: 'pending' });
+                }
+                if (id) {
+                    const old = appData.bankDebts.find(x => x.id == id);
+                    if (old && old.installments && old.installments.length) {
+                        installments = old.installments;
+                    }
+                }
+            } else {
+                installments = [{ dueDate: firstDate || new Date().toISOString().split('T')[0], amount: totalAmount, status: 'pending' }];
+            }
+
+            if (id) {
+                const idx = appData.bankDebts.findIndex(x => x.id == id);
+                if (idx !== -1) {
+                    const old = appData.bankDebts[idx];
+                    if (old.installments && old.installments.length !== installmentCount) {
+                        const paidCount = old.installments.filter(i => i.status === 'paid').length;
+                        const base = totalAmount / installmentCount;
+                        let date = new Date(firstDate);
+                        installments = [];
+                        for (let i = 0; i < installmentCount; i++) {
+                            const due = new Date(date);
+                            due.setMonth(due.getMonth() + i);
+                            installments.push({ dueDate: formatDate(due), amount: parseFloat(base.toFixed(2)), status: i < paidCount ? 'paid' : 'pending' });
+                        }
+                    }
+                    appData.bankDebts[idx] = { ...appData.bankDebts[idx], name, type, totalAmount, currentAmount, interestRate, description, installments };
+                    showToast('Banka borcu güncellendi.', 'success');
+                }
+            } else {
+                appData.bankDebts.push({ id: Date.now(), name, type, totalAmount, currentAmount, interestRate, description, installments });
+                showToast('Banka borcu eklendi.', 'success');
+            }
+            saveData();
+            bootstrap.Modal.getInstance(document.getElementById('addBankDebtModal')).hide();
+            document.getElementById('addBankDebtForm').reset();
+            document.getElementById('edit-bank-debt-id').value = '';
+            document.getElementById('bankDebtModalTitle').textContent = 'Yeni Banka Borcu Ekle';
+            renderBankDebts(); updateDashboard(); updateAIAdvice();
+        }
+
+        function deleteBankDebt(id) {
+            if (!confirm('Banka borcu silinecek. Emin misiniz?')) return;
+            appData.bankDebts = appData.bankDebts.filter(x => x.id !== id);
+            saveData(); renderBankDebts(); updateDashboard(); updateAIAdvice(); showToast('Banka borcu silindi.', 'success');
+        }
+
+        let pendingInstallment = null;
+        function payInstallment(bankDebtId, index) {
+            const b = appData.bankDebts.find(x => x.id === bankDebtId);
+            if (!b || !b.installments || index >= b.installments.length) return;
+            const inst = b.installments[index];
+            if (inst.status === 'paid') { showToast('Bu taksit zaten ödenmiş.', 'error'); return; }
+            pendingInstallment = { bankDebtId, index };
+            document.getElementById('pay-installment-debt-name').textContent = b.name;
+            document.getElementById('pay-installment-amount').textContent = formatCurrency(inst.amount);
+            document.getElementById('pay-installment-due').textContent = formatDisplayDate(inst.dueDate);
+            new bootstrap.Modal(document.getElementById('payInstallmentModal')).show();
+        }
+        function confirmPayInstallment() {
+            if (!pendingInstallment) return;
+            const { bankDebtId, index } = pendingInstallment;
+            const b = appData.bankDebts.find(x => x.id === bankDebtId);
+            if (!b) return;
+            const inst = b.installments[index];
+            if (!inst || inst.status === 'paid') { showToast('Hata: Taksit zaten ödenmiş.', 'error'); return; }
+            inst.status = 'paid';
+            inst.paidDate = new Date().toISOString().split('T')[0];
+            b.currentAmount -= inst.amount;
+            if (b.currentAmount < 0) b.currentAmount = 0;
+            saveData();
+            bootstrap.Modal.getInstance(document.getElementById('payInstallmentModal')).hide();
+            pendingInstallment = null;
+            const listModal = bootstrap.Modal.getInstance(document.getElementById('installmentListModal'));
+            if (listModal) {
+                listModal.hide();
+                setTimeout(() => showInstallments(bankDebtId), 300);
+            }
+            renderBankDebts(); updateDashboard(); updateAIAdvice();
+            showToast('Taksit ödemesi kaydedildi.', 'success');
+        }
+
+        // ---- Dashboard ----
+        function updateDashboard() {
+            let totalBalance=0, totalIncome=0, totalExpense=0, totalDebt=0, totalReceivable=0, totalBankDebt=0;
+            appData.accounts.forEach(a => {
+                let bal = a.balance;
+                if (a.currency === 'USD') bal *= 32;
+                else if (a.currency === 'EUR') bal *= 35;
+                else if (a.currency === 'XAU') bal *= 2200;
+                totalBalance += bal;
+            });
+            const month = new Date().getMonth(), year = new Date().getFullYear();
+            appData.transactions.forEach(t => {
+                const d = new Date(t.date);
+                if (d.getMonth() === month && d.getFullYear() === year) {
+                    if (t.type === 'income') totalIncome += t.amount;
+                    else if (t.type === 'expense') totalExpense += t.amount;
+                }
+            });
+            appData.debts.forEach(d => { if (d.status === 'pending') totalDebt += d.amount; });
+            appData.receivables.forEach(r => { if (r.status === 'pending') totalReceivable += r.amount; });
+            appData.bankDebts.forEach(b => { totalBankDebt += b.currentAmount; });
+            const netWorth = totalBalance + totalReceivable - totalDebt - totalBankDebt;
+            document.getElementById('net-worth').textContent = formatCurrency(netWorth);
+            document.getElementById('total-income').textContent = formatCurrency(totalIncome);
+            document.getElementById('total-expense').textContent = formatCurrency(totalExpense);
+            document.getElementById('total-debt').textContent = formatCurrency(totalDebt + totalBankDebt);
+            document.getElementById('net-worth-change').textContent = `Son 30 gün: ${formatCurrency(netWorth * 0.05)}`;
+            renderUpcomingPayments();
+            renderRecentTransactions();
+            createExpenseDistributionChart();
+            createIncomeExpenseTrendChart();
+        }
+        function renderUpcomingPayments() {
+            const container = document.getElementById('upcoming-payments');
+            const today = new Date();
+            const nextWeek = new Date(today); nextWeek.setDate(nextWeek.getDate() + 7);
+            const upcoming = [];
+            appData.debts.forEach(d => { if (d.status === 'pending') { const due = new Date(d.dueDate); if (due >= today && due <= nextWeek) upcoming.push({ ...d, type:'debt' }); } });
+            appData.receivables.forEach(r => { if (r.status === 'pending') { const due = new Date(r.dueDate); if (due >= today && due <= nextWeek) upcoming.push({ ...r, type:'receivable' }); } });
+            appData.bankDebts.forEach(b => {
+                (b.installments || []).forEach(inst => {
+                    if (inst.status === 'pending') {
+                        const due = new Date(inst.dueDate);
+                        if (due >= today && due <= nextWeek) upcoming.push({ person: b.name, amount: inst.amount, dueDate: inst.dueDate, type:'bank-installment' });
+                    }
+                });
+            });
+            if (!upcoming.length) { container.innerHTML = `<div class="empty-state"><i class="far fa-calendar-check"></i><h5>Yaklaşan ödeme yok</h5></div>`; return; }
+            let html = '';
+            upcoming.forEach(item => {
+                const days = Math.ceil((new Date(item.dueDate) - today) / (1000*60*60*24));
+                const cls = days <= 1 ? 'alert-danger' : days <= 3 ? 'alert-warning' : 'alert-info';
+                html += `<div class="alert ${cls} d-flex justify-content-between"><div><h6 class="mb-1">${item.person}</h6><small>${formatDisplayDate(item.dueDate)} (${days} gün kaldı)</small></div><div class="fw-bold">${formatCurrency(item.amount)}</div></div>`;
+            });
+            container.innerHTML = html;
+        }
+        function renderRecentTransactions() {
+            const container = document.getElementById('recent-transactions');
+            const sorted = [...appData.transactions].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0,5);
+            if (!sorted.length) { container.innerHTML = `<div class="empty-state"><i class="far fa-clock"></i><h5>Henüz işlem yok</h5></div>`; return; }
+            let html = '';
+            sorted.forEach(t => {
+                const icon = t.type === 'income' ? 'fa-arrow-down text-success' : t.type === 'expense' ? 'fa-arrow-up text-danger' : 'fa-exchange text-info';
+                const acc = getAccountName(t.accountId || t.fromAccountId);
+                html += `<div class="d-flex justify-content-between border-bottom py-2"><div><i class="fas ${icon} me-2"></i><span>${t.description || t.category}</span><br><small class="text-muted">${acc || ''} • ${formatDisplayDate(t.date)}</small></div><div class="fw-bold ${t.type === 'income' ? 'text-success' : 'text-danger'}">${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}</div></div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // ---- Grafikler ----
+        let expenseChart, trendChart, investmentChart, reportChart;
+        function createExpenseDistributionChart() {
+            const ctx = document.getElementById('expenseDistributionChart').getContext('2d');
+            if (expenseChart) expenseChart.destroy();
+            const totals = {};
+            const month = new Date().getMonth(), year = new Date().getFullYear();
+            appData.transactions.forEach(t => {
+                if (t.type === 'expense') {
+                    const d = new Date(t.date);
+                    if (d.getMonth() === month && d.getFullYear() === year) totals[t.category] = (totals[t.category] || 0) + t.amount;
+                }
+            });
+            const labels = Object.keys(totals), data = Object.values(totals);
+            const colors = ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#8AC926','#1982C4','#6A4C93','#FF595E','#118AB2','#06D6A0'];
+            if (!labels.length) {
+                expenseChart = new Chart(ctx, { type:'doughnut', data:{ labels:['Henüz veri yok'], datasets:[{ data:[1], backgroundColor:['#e9ecef'] }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom' }, tooltip:{ enabled:false } } } });
+                return;
+            }
+            expenseChart = new Chart(ctx, { type:'doughnut', data:{ labels, datasets:[{ data, backgroundColor:colors.slice(0, labels.length) }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom' } } } });
+        }
+        function createIncomeExpenseTrendChart() {
+            const ctx = document.getElementById('incomeExpenseTrendChart').getContext('2d');
+            if (trendChart) trendChart.destroy();
+            const months = [], incData = [], expData = [];
+            const today = new Date();
+            for (let i=5; i>=0; i--) {
+                const date = new Date(today.getFullYear(), today.getMonth()-i, 1);
+                months.push(date.toLocaleDateString('tr-TR', { month:'short' }).toUpperCase());
+                let inc=0, exp=0;
+                appData.transactions.forEach(t => {
+                    const d = new Date(t.date);
+                    if (d.getMonth() === date.getMonth() && d.getFullYear() === date.getFullYear()) {
+                        if (t.type === 'income') inc += t.amount;
+                        else if (t.type === 'expense') exp += t.amount;
+                    }
+                });
+                incData.push(inc);
+                expData.push(exp);
+            }
+            trendChart = new Chart(ctx, {
+                type:'line',
+                data:{ labels:months, datasets:[{ label:'Gelir', data:incData, borderColor:'#27ae60', backgroundColor:'rgba(39,174,96,0.1)', fill:true, tension:0.4 }, { label:'Gider', data:expData, borderColor:'#e74c3c', backgroundColor:'rgba(231,76,60,0.1)', fill:true, tension:0.4 }] },
+                options:{ responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true, ticks:{ callback:v=>formatCurrency(v) } } }, plugins:{ tooltip:{ callbacks:{ label:ctx=>`${ctx.dataset.label}: ${formatCurrency(ctx.raw)}` } } } }
+            });
+        }
+        function createInvestmentDistributionChart() {
+            const ctx = document.getElementById('investmentDistributionChart').getContext('2d');
+            if (investmentChart) investmentChart.destroy();
+            const inv = appData.accounts.filter(a => a.type === 'investment' || a.type === 'gold');
+            if (!inv.length) {
+                investmentChart = new Chart(ctx, { type:'pie', data:{ labels:['Henüz yatırım yok'], datasets:[{ data:[1], backgroundColor:['#e9ecef'] }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom' }, tooltip:{ enabled:false } } } });
+                return;
+            }
+            const labels = inv.map(a => a.name);
+            const data = inv.map(a => {
+                let bal = a.balance;
+                if (a.currency === 'USD') bal *= 32;
+                else if (a.currency === 'EUR') bal *= 35;
+                else if (a.currency === 'XAU') bal *= 2200;
+                return bal;
+            });
+            const colors = inv.map(a => a.type === 'gold' ? '#FFD700' : '#11998e');
+            investmentChart = new Chart(ctx, {
+                type:'pie',
+                data:{ labels, datasets:[{ data, backgroundColor:colors }] },
+                options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom' }, tooltip:{ callbacks:{ label:ctx=>{ const acc=inv[ctx.dataIndex]; let val=formatCurrency(ctx.raw); if (acc.currency==='XAU') val += ` (${acc.balance.toFixed(2)} gr)`; return `${ctx.label}: ${val}`; } } } } }
+            });
+        }
+
+        // ---- Raporlar ----
+        function generateReport() {
+            const period = document.getElementById('report-period').value;
+            const type = document.getElementById('report-type').value;
+            const ctx = document.getElementById('report-chart').getContext('2d');
+            if (reportChart) reportChart.destroy();
+            const titles = {
+                'income-vs-expense':'Gelir-Gider Karşılaştırması',
+                'expense-by-category':'Gider Kategorileri',
+                'income-by-category':'Gelir Kategorileri',
+                'account-balances':'Hesap Bakiyeleri',
+                'investment-distribution':'Yatırım Dağılımı'
+            };
+            document.getElementById('report-title').textContent = titles[type] || 'Rapor';
+            let filtered = appData.transactions;
+            const now = new Date();
+            if (period === 'this-month') {
+                const m=now.getMonth(), y=now.getFullYear();
+                filtered = filtered.filter(t => { const d=new Date(t.date); return d.getMonth()===m && d.getFullYear()===y; });
+            } else if (period === 'last-month') {
+                const m=now.getMonth()-1, y=now.getFullYear();
+                filtered = filtered.filter(t => { const d=new Date(t.date); return d.getMonth()===m && d.getFullYear()===y; });
+            } else if (period === 'this-year') {
+                const y=now.getFullYear();
+                filtered = filtered.filter(t => new Date(t.date).getFullYear()===y);
+            } else if (period === 'last-year') {
+                const y=now.getFullYear()-1;
+                filtered = filtered.filter(t => new Date(t.date).getFullYear()===y);
+            }
+            switch(type) {
+                case 'income-vs-expense': createIncomeExpenseReport(ctx, filtered); break;
+                case 'expense-by-category': createCategoryReport(ctx, filtered, 'expense'); break;
+                case 'income-by-category': createCategoryReport(ctx, filtered, 'income'); break;
+                case 'account-balances': createAccountBalancesReport(ctx); break;
+                case 'investment-distribution': createInvestmentDistributionReport(ctx); break;
+            }
+            renderReportSummary(filtered, type);
+        }
+        function createIncomeExpenseReport(ctx, filtered) {
+            let inc=0, exp=0;
+            filtered.forEach(t => { if (t.type==='income') inc += t.amount; else if (t.type==='expense') exp += t.amount; });
+            reportChart = new Chart(ctx, {
+                type:'bar',
+                data:{ labels:['Gelir','Gider'], datasets:[{ label:'Tutar', data:[inc, exp], backgroundColor:['#27ae60','#e74c3c'] }] },
+                options:{ responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true, ticks:{ callback:v=>formatCurrency(v) } } }, plugins:{ tooltip:{ callbacks:{ label:ctx=>`${ctx.dataset.label}: ${formatCurrency(ctx.raw)}` } } } }
+            });
+        }
+        function createCategoryReport(ctx, filtered, type) {
+            const totals = {};
+            filtered.forEach(t => { if (t.type === type) totals[t.category] = (totals[t.category] || 0) + t.amount; });
+            const labels = Object.keys(totals), data = Object.values(totals);
+            const colors = ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#8AC926','#1982C4','#6A4C93','#FF595E','#118AB2','#06D6A0'];
+            reportChart = new Chart(ctx, {
+                type:'pie',
+                data:{ labels, datasets:[{ data, backgroundColor:colors.slice(0,labels.length) }] },
+                options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom' }, tooltip:{ callbacks:{ label:ctx=>`${ctx.label}: ${formatCurrency(ctx.raw)}` } } } }
+            });
+        }
+        function createAccountBalancesReport(ctx) {
+            const labels = appData.accounts.map(a => a.name);
+            const data = appData.accounts.map(a => {
+                let bal = a.balance;
+                if (a.currency === 'USD') bal *= 32;
+                else if (a.currency === 'EUR') bal *= 35;
+                else if (a.currency === 'XAU') bal *= 2200;
+                return bal;
+            });
+            const colors = data.map(b => b >= 0 ? '#27ae60' : '#e74c3c');
+            reportChart = new Chart(ctx, {
+                type:'bar',
+                data:{ labels, datasets:[{ label:'Bakiye', data, backgroundColor:colors }] },
+                options:{ responsive:true, maintainAspectRatio:false, scales:{ y:{ ticks:{ callback:v=>formatCurrency(v) } } }, plugins:{ tooltip:{ callbacks:{ label:ctx=>`${ctx.dataset.label}: ${formatCurrency(ctx.raw)}` } } } }
+            });
+        }
+        function createInvestmentDistributionReport(ctx) { createInvestmentDistributionChart(); reportChart = investmentChart; }
+        function renderReportSummary(filtered, type) {
+            const container = document.getElementById('report-summary');
+            let inc=0, exp=0;
+            filtered.forEach(t => { if (t.type==='income') inc += t.amount; else if (t.type==='expense') exp += t.amount; });
+            const net = inc - exp;
+            container.innerHTML = `<div class="col-md-12"><div class="card"><div class="card-body"><h6>Özet İstatistikler</h6><div class="row">
+                <div class="col-4"><strong>Toplam Gelir</strong><br><span class="text-success">${formatCurrency(inc)}</span></div>
+                <div class="col-4"><strong>Toplam Gider</strong><br><span class="text-danger">${formatCurrency(exp)}</span></div>
+                <div class="col-4"><strong>Net Kar/Zarar</strong><br><span class="${net>=0?'text-success':'text-danger'}">${formatCurrency(net)}</span></div>
+            </div></div></div></div>`;
+        }
+        function exportReportCSV() {
+            const type = document.getElementById('report-type').value;
+            let data = [];
+            if (type === 'income-vs-expense') {
+                let inc=0, exp=0;
+                appData.transactions.forEach(t => { if (t.type==='income') inc += t.amount; else if (t.type==='expense') exp += t.amount; });
+                data = [['Tür','Tutar'], ['Gelir', inc], ['Gider', exp]];
+            } else if (type === 'expense-by-category' || type === 'income-by-category') {
+                const cat = type === 'expense-by-category' ? 'expense' : 'income';
+                const totals = {};
+                appData.transactions.forEach(t => { if (t.type === cat) totals[t.category] = (totals[t.category] || 0) + t.amount; });
+                data = [['Kategori','Tutar']];
+                Object.keys(totals).forEach(k => data.push([k, totals[k]]));
+            } else if (type === 'account-balances') {
+                data = [['Hesap','Bakiye']];
+                appData.accounts.forEach(a => {
+                    let bal = a.balance;
+                    if (a.currency === 'USD') bal *= 32;
+                    else if (a.currency === 'EUR') bal *= 35;
+                    else if (a.currency === 'XAU') bal *= 2200;
+                    data.push([a.name, bal]);
+                });
+            } else if (type === 'investment-distribution') {
+                data = [['Yatırım','TL Değeri']];
+                appData.accounts.filter(a => a.type === 'investment' || a.type === 'gold').forEach(a => {
+                    let bal = a.balance;
+                    if (a.currency === 'USD') bal *= 32;
+                    else if (a.currency === 'EUR') bal *= 35;
+                    else if (a.currency === 'XAU') bal *= 2200;
+                    data.push([a.name, bal]);
+                });
+            }
+            if (!data.length) { showToast('Rapor verisi yok.', 'error'); return; }
+            let csv = data.map(row => row.join(',')).join('\n');
+            const blob = new Blob([csv], { type:'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `rapor-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('CSV raporu indirildi.', 'success');
+        }
+
+        // ---- AI Asistanı ----
+        function updateAIAdvice() {
+            if (!appData.settings.aiAdviceEnabled) { document.getElementById('ai-advice-card').style.display = 'none'; return; }
+            document.getElementById('ai-advice-card').style.display = 'block';
+            let totalBalance=0, totalIncome=0, totalExpense=0, totalDebt=0, totalReceivable=0, totalBankDebt=0;
+            appData.accounts.forEach(a => {
+                let bal = a.balance;
+                if (a.currency === 'USD') bal *= 32;
+                else if (a.currency === 'EUR') bal *= 35;
+                else if (a.currency === 'XAU') bal *= 2200;
+                totalBalance += bal;
+            });
+            const month = new Date().getMonth(), year = new Date().getFullYear();
+            appData.transactions.forEach(t => {
+                const d = new Date(t.date);
+                if (d.getMonth() === month && d.getFullYear() === year) {
+                    if (t.type === 'income') totalIncome += t.amount;
+                    else if (t.type === 'expense') totalExpense += t.amount;
+                }
+            });
+            appData.debts.forEach(d => { if (d.status === 'pending') totalDebt += d.amount; });
+            appData.receivables.forEach(r => { if (r.status === 'pending') totalReceivable += r.amount; });
+            appData.bankDebts.forEach(b => { totalBankDebt += b.currentAmount; });
+            const netWorth = totalBalance + totalReceivable - totalDebt - totalBankDebt;
+            let advice = "";
+            const invTotal = appData.accounts.filter(a => a.type === 'investment' || a.type === 'gold').reduce((sum, a) => {
+                let bal = a.balance;
+                if (a.currency === 'USD') bal *= 32;
+                else if (a.currency === 'EUR') bal *= 35;
+                else if (a.currency === 'XAU') bal *= 2200;
+                return sum + bal;
+            }, 0);
+            if (netWorth > 0) {
+                const ratio = (invTotal / netWorth) * 100;
+                if (ratio < 10) advice += "Yatırımlarınız net varlığınızın %10'undan az. Yatırımlarınızı artırmayı düşünebilirsiniz. ";
+                else if (ratio > 30) advice += "Yatırımlarınız net varlığınızın %30'undan fazla. Riskinizi yönetmeye dikkat edin. ";
+            }
+            if (totalIncome > 0) {
+                const rate = (totalExpense / totalIncome) * 100;
+                if (rate > 90) advice += "Giderleriniz gelirinizin %90'ından fazla! Acilen tasarruf önlemleri almalısınız. ";
+                else if (rate > 70) advice += "Giderleriniz gelirinizin %70'inden fazla. Tasarruf için daha fazla çaba göstermelisiniz. ";
+                else if (rate < 50) advice += "Gelir-gider dengeniz çok iyi! Tasarruf oranınız yüksek. ";
+            }
+            const totalDebts = totalDebt + totalBankDebt;
+            if (totalDebts > 0 && totalIncome > 0) {
+                const debtRatio = (totalDebts / totalIncome) * 100;
+                if (debtRatio > 50) advice += "Borçlarınız gelirinizin yarısından fazla! Borçlarınızı önceliklendirin. ";
+                else if (debtRatio > 30) advice += "Borç oranınız makul seviyede ama dikkatli olun. ";
+            }
+            if (netWorth < 0) advice += "Net varlığınız negatif! Finansal durumunuzu iyileştirmek için acil önlemler almalısınız. ";
+            else if (netWorth < totalIncome) advice += "Net varlığınız bir aylık gelirinizden düşük. Birikimlerinizi artırmaya odaklanın. ";
+            if (!advice) advice = "Finansal durumunuz genel olarak iyi görünüyor. ";
+            const randomTip = aiAdviceTips[Math.floor(Math.random() * aiAdviceTips.length)];
+            document.getElementById('ai-advice-content').textContent = advice;
+            document.getElementById('ai-tip-text').textContent = randomTip;
+        }
+
+        // ---- Kategori Yönetimi ----
+        function updateCategoryUI() {
+            const inc = document.getElementById('income-categories-list');
+            const exp = document.getElementById('expense-categories-list');
+            inc.innerHTML = ''; exp.innerHTML = '';
+            appData.categories.income.forEach(c => {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-primary me-2 mb-1 category-badge';
+                badge.innerHTML = `${c} <i class="fas fa-times ms-1" onclick="removeCategory('income','${c}')"></i>`;
+                inc.appendChild(badge);
+            });
+            appData.categories.expense.forEach(c => {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-secondary me-2 mb-1 category-badge';
+                badge.innerHTML = `${c} <i class="fas fa-times ms-1" onclick="removeCategory('expense','${c}')"></i>`;
+                exp.appendChild(badge);
+            });
+        }
+        function addCategory(type) {
+            const input = document.getElementById(type === 'income' ? 'new-income-category' : 'new-expense-category');
+            const val = input.value.trim();
+            if (!val) { showToast('Kategori adı girin.', 'error'); return; }
+            if (appData.categories[type].includes(val)) { showToast('Bu kategori zaten var.', 'error'); return; }
+            appData.categories[type].push(val);
+            saveData();
+            updateCategoryUI();
+            input.value = '';
+            showToast('Kategori eklendi.', 'success');
+        }
+        function removeCategory(type, cat) {
+            appData.categories[type] = appData.categories[type].filter(c => c !== cat);
+            saveData();
+            updateCategoryUI();
+            showToast('Kategori silindi.', 'success');
+        }
+
+        // ---- Ayarlar ----
+        function loadSettings() {
+            document.getElementById('currency').value = appData.settings.currency || 'TRY';
+            document.getElementById('language').value = appData.settings.language || 'tr';
+            document.getElementById('date-format').value = appData.settings.dateFormat || 'DD.MM.YYYY';
+            document.getElementById('dark-mode').checked = appData.settings.darkMode || false;
+            document.getElementById('ai-advice-enabled').checked = appData.settings.aiAdviceEnabled !== false;
+            if (appData.settings.darkMode) document.body.classList.add('dark-mode');
+        }
+        function saveSettings() {
+            appData.settings.currency = document.getElementById('currency').value;
+            appData.settings.language = document.getElementById('language').value;
+            appData.settings.dateFormat = document.getElementById('date-format').value;
+            appData.settings.darkMode = document.getElementById('dark-mode').checked;
+            appData.settings.aiAdviceEnabled = document.getElementById('ai-advice-enabled').checked;
+            saveData();
+            document.body.classList.toggle('dark-mode', appData.settings.darkMode);
+            showToast('Ayarlar kaydedildi.', 'success');
+        }
+
+        // ---- Veri Yedekleme & Geri Yükleme ----
+        function exportAllData() {
+            const blob = new Blob([JSON.stringify(appData, null, 2)], { type:'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `finans-verileri-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Veriler yedeklendi.', 'success');
+        }
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!data.accounts || !data.transactions) { showToast('Geçersiz dosya.', 'error'); return; }
+                    if (!confirm('Mevcut veriler silinecek. Emin misiniz?')) return;
+                    appData = data;
+                    saveData();
+                    loadData();
+                    showToast('Veriler geri yüklendi.', 'success');
+                } catch (err) { showToast('Dosya okunamadı.', 'error'); }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+        function resetAllData() {
+            if (confirm('TÜM VERİLER SİLİNECEK. Devam etmek istiyor musunuz?')) {
+                if (confirm('Son kez onaylıyorum: Tüm veriler silinecek.')) {
+                    localStorage.removeItem('financeAppData');
+                    location.reload();
+                }
+            }
+        }
+
+        // ---- Global erişim ----
+        window.editAccount = editAccount;
+        window.deleteAccount = deleteAccount;
+        window.editTransaction = editTransaction;
+        window.deleteTransaction = deleteTransaction;
+        window.editDebt = editDebt;
+        window.markDebtAsPaid = markDebtAsPaid;
+        window.deleteDebt = deleteDebt;
+        window.editReceivable = editReceivable;
+        window.markReceivableAsPaid = markReceivableAsPaid;
+        window.deleteReceivable = deleteReceivable;
+        window.editBankDebt = editBankDebt;
+        window.deleteBankDebt = deleteBankDebt;
+        window.payInstallment = payInstallment;
+        window.showInstallments = showInstallments;
+        window.removeCategory = removeCategory;
+        window.addCategory = addCategory;
+        window.exportAllData = exportAllData;
+        window.resetAllData = resetAllData;
+    </script>
+</body>
+</html>
